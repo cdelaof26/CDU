@@ -99,9 +99,16 @@ $ cd python main.py
 
 ### Historial de cambios
 
+### v0.0.2 [09-04-23]
+- Menu implementado
+  - La opción `1. Convertir datos` puede convertir datos de unidades
+    simples y _complejas_ (derivadas)
+
+
 ### v0.0.1-0 [08-04-23]
 - Proyecto inicial
   - Se agrega README.md
+
 
 ### v0.0.1 [08-04-23]
 

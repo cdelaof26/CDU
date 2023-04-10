@@ -1,28 +1,6 @@
 import herramientas.utilidades as utilidades
 import herramientas.recuadro as recuadro
-
-
 import herramientas.definiciones as definiciones
-# print(definiciones.convertir_unidades(definiciones.TDU.MASA, "kg", 1, "oz"))
-# print(definiciones.convertir_unidades(definiciones.TDU.LONGITUD, "km", 1, "in"))
-# print(definiciones.convertir_unidades(definiciones.TDU.TIEMPO, "d", 1, "ms"))
-
-# print(definiciones.convertir_unidades(definiciones.TDU.MASA, "mg", 100, "oz"))
-# print(definiciones.convertir_unidades(definiciones.TDU.TIEMPO, "w", 100, "d"))
-# print(definiciones.convertir_unidades(definiciones.TDU.LONGITUD, "yd", 40, "m"))
-# print(definiciones.convertir_unidades(definiciones.TDU.TIEMPO, "ms", 4000000000, "y"))
-# print(definiciones.convertir_unidades(definiciones.TDU.MASA, "mg", 4000, "oz"))
-
-# print(definiciones.convertir_unidades(definiciones.TDU.LONGITUD, "mm", 40000000, "mi"))
-# print(definiciones.convertir_unidades(definiciones.TDU.LONGITUD, "mm", 40000000, "ft"))
-# print(definiciones.convertir_unidades(definiciones.TDU.MASA, "lb", 100, "kg"))
-# print(definiciones.convertir_unidades(definiciones.TDU.MASA, "mg", 10000, "kg"))
-
-print(definiciones.convertir_unidades(definiciones.TDU.MASA, "g", 2, "kg"))
-
-# WIP
-
-exit()
 
 
 def mostrar_menu():
@@ -30,20 +8,35 @@ def mostrar_menu():
         ["    Bienvenido a CDUP    ",
          "  Menu",
          "1. Convertir datos",
-         "2. Crear definición",
-         "P. Preferencias",
+         # "2. Crear definición",
+         # "P. Preferencias",
          "S. Salir"
          ]
     )
 
     while True:
-        print(menu)
-        print("Selecciona una opción")
+        try:
+            utilidades.limpiar_pantalla()
 
-        opcion = utilidades.seleccionar_opcion(["1", "2", "P", "S"])
+            print(menu)
+            print("Selecciona una opción")
 
-        if opcion == "S":
-            break
+            opcion = utilidades.seleccionar_opcion(["1", "2", "P", "S"])
+
+            if opcion == "1":
+                resultado = definiciones.procesar_entrada()
+                if resultado:
+                    print(resultado)
+                else:
+                    print("    No fue posible convertir las unidades!")
+                input("  Presiona enter para continuar ")
+
+            if opcion == "S":
+                break
+        except (KeyboardInterrupt, ValueError) as e:
+            print("\n    Proceso interrumpido!")
+            print("Causa:", e, "\n")
+            input("  Presiona enter para continuar ")
 
     print("Bye")
 

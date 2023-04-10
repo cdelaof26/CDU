@@ -1,4 +1,6 @@
+import herramientas.utilidades as utilidades
 from enum import Enum
+import re
 
 
 # Utilidades para el manejo de definiciones
@@ -76,8 +78,25 @@ def enlistar_unidades_de(tipo: TDU) -> list:
     return unidades
 
 
-def permutar_unidades(tipo: TDU, longitud_del_elemento: int) -> list:
+def determinar_tipo_de_unidad(unidad: str):
+    global definiciones
+
+    for definicion in definiciones:
+        if unidad == definicion.unidad or unidad == definicion.unidad_equivalente:
+            return definicion.tipo
+
+    raise ValueError("Unidad desconocida")
+
+
+def permutar_unidades(tipo: TDU, longitud_del_elemento: int, unidad_inicial: str, unidad_final: str) -> list:
     unidades0 = enlistar_unidades_de(tipo)
+    try:
+        unidades0.remove(unidad_inicial)
+        unidades0.remove(unidad_final)
+    except ValueError:
+        return []
+
+    longitud_del_elemento -= 2
 
     permutaciones = list()
     script = ""
@@ -97,7 +116,8 @@ def permutar_unidades(tipo: TDU, longitud_del_elemento: int) -> list:
         if i + 1 < longitud_del_elemento:
             script += indentado + estructura_rem % (i + 1, i, i) + "\n"
 
-    script += indentado + "permutaciones.append((" + " + ".join(variables) + ").split(\" \"))"
+    script += indentado + "permutaciones.append((\"" + unidad_inicial + " \" + " + " + ".join(variables) + " + \" " + \
+              unidad_final + "\").split(\" \"))"
 
     exec(script)
 
@@ -115,15 +135,17 @@ def convertir_directo(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: 
     return None
 
 
-def expresar_conversion_directa(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str) -> str:
+def expresar_conversion_directa(tipo: TDU, unidad: str, unidad_a_convertir: str):
     for definicion in definiciones:
         if tipo == definicion.tipo:
             if unidad == definicion.unidad and unidad_a_convertir == definicion.unidad_equivalente:
-                return f"{valor} {unidad} -> {definicion.valor_en_unidad_equivalente} {definicion.unidad_equivalente}"
-            if unidad == definicion.unidad_equivalente and unidad_a_convertir == definicion.unidad:
-                return f"{valor} {unidad} -> {definicion.valor_en_unidad} {definicion.unidad}"
+                return f"{definicion.valor_en_unidad} {unidad} " \
+                       f"-> {definicion.valor_en_unidad_equivalente} {unidad_a_convertir}"
+            if unidad_a_convertir == definicion.unidad and unidad == definicion.unidad_equivalente:
+                return f"1 {definicion.unidad} " \
+                       f"-> {definicion.valor_en_unidad / definicion.valor_en_unidad_equivalente} {definicion.unidad_equivalente}"
 
-    return ""
+    return
 
 
 def convertir_unidades_directo(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str):
@@ -140,61 +162,172 @@ def convertir_unidades_directo(tipo: TDU, unidad: str, valor: float, unidad_a_co
     return
 
 
-def convertir_unidades(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str):
-    conversion = convertir_unidades_directo(tipo, unidad, valor, unidad_a_convertir)
-    if conversion is not None:
+def aplicar_conversiones_seguidas(tipo: TDU, unidad: str, unidades: str,
+                                  solo_expresar: bool, valor=None, unidad_a_convertir=None) -> str:
+    operaciones = ""
+    valor_convertido = float(valor)
+
+    for nueva_unidad in unidades[1:]:
+        if not solo_expresar:
+            if valor_convertido.is_integer():
+                operaciones += f"Convierte {int(valor_convertido)} {unidad} a {nueva_unidad}\n"
+            else:
+                operaciones += f"Convierte %.4f {unidad} a {nueva_unidad}\n" % valor_convertido
+
+        if solo_expresar:
+            resultado = expresar_conversion_directa(tipo, unidad, nueva_unidad)
+        else:
+            resultado = convertir_directo(tipo, unidad, valor_convertido, nueva_unidad)
+
+        if resultado is None:
+            return ""
+
+        valor_convertido = resultado
+        unidad = nueva_unidad
+
+        if solo_expresar:
+            operaciones += resultado + ";"
+        else:
+            if valor_convertido.is_integer():
+                operaciones += f"   Resultado: {int(valor_convertido)} {nueva_unidad}\n"
+            else:
+                operaciones += f"   Resultado: %.4f {nueva_unidad}\n" % valor_convertido
+
+    return operaciones
+
+
+def convertir_unidades(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str, solo_expresar: bool) -> str:
+    if solo_expresar:
+        conversion = expresar_conversion_directa(tipo, unidad, unidad_a_convertir)
+    else:
+        conversion = convertir_unidades_directo(tipo, unidad, valor, unidad_a_convertir)
+
+    if conversion is not None and not solo_expresar:
+        return f"{valor} {unidad} son {conversion} {unidad_a_convertir}"
+    elif conversion is not None:
         return conversion
 
     unidades = enlistar_unidades_de(tipo)
     for i in range(3, len(unidades) + 1):
-        permutaciones = permutar_unidades(tipo, i)
+        permutaciones = permutar_unidades(tipo, i, unidad, unidad_a_convertir)
 
-        permutaciones_posibles = list()
-        for permutacion in permutaciones:
-            # permutaciones_posibles son las permutaciones que inician con la
-            # unidad original y terminan con la unidad a convertir
-            #
-            if permutacion[0] == unidad and permutacion[-1] == unidad_a_convertir:
-                permutaciones_posibles.append(permutacion)
-
-        # Con las permutaciones posibles se intenta hacer las conversiones
-        # como las indica la propia permutación
-        #  Por ejemplo: mg -> kg
-        #       La conversión fallaría porque no hay una forma directa de
-        #       convertir de mg a kg, por lo que continuaría con otras
-        #       permutaciones hasta encontrar alguna que permita la conversión
-        #           Como: mg -> g -> kg
-        #
-        conversion_fallida = True
         operaciones = ""
-        for pp in permutaciones_posibles:
-            operaciones = ""
-            conversion_fallida = False
-            unidad_de_conversion = unidad
-            valor_convertido = float(valor)
+        for permutacion in permutaciones:
+            # Con las permutaciones posibles se intenta hacer las conversiones
+            # como las indica la propia permutación
+            operaciones = aplicar_conversiones_seguidas(tipo, unidad, permutacion, solo_expresar,
+                                                        valor=valor, unidad_a_convertir=unidad_a_convertir)
 
-            for nueva_unidad in pp[1:]:
-                if valor_convertido.is_integer():
-                    operaciones += f"Convierte {int(valor_convertido)} {unidad_de_conversion} a {nueva_unidad}\n"
-                else:
-                    operaciones += f"Convierte %.4f {unidad_de_conversion} a {nueva_unidad}\n" % valor_convertido
-
-                resultado = convertir_directo(tipo, unidad_de_conversion, valor_convertido, nueva_unidad)
-                if resultado is None:
-                    conversion_fallida = True
-                    break
-
-                valor_convertido = resultado
-                unidad_de_conversion = nueva_unidad
-                if valor_convertido.is_integer():
-                    operaciones += f"  Resultado: {int(valor_convertido)} {nueva_unidad}\n"
-                else:
-                    operaciones += f"  Resultado: %.4f {nueva_unidad}\n" % valor_convertido
-
-            if not conversion_fallida:
+            if operaciones:
                 break
 
-        if not conversion_fallida:
+        if operaciones:
+            if solo_expresar:
+                return operaciones
             return operaciones[:-1]
 
     return ""
+
+
+def ensamblar_expresion(cadena_de_conversiones: str, es_numerador: bool) -> str:
+    if cadena_de_conversiones[-1] == ";":
+        cadena_de_conversiones = cadena_de_conversiones[:-1]
+
+    cadena_de_conversiones = cadena_de_conversiones.split(";")
+
+    equivalencias = list()
+    for expresion in cadena_de_conversiones:
+        equivalencias += expresion.split(" -> ")
+
+    operaciones = ""
+    i = 1
+    while i < len(equivalencias):
+        if es_numerador:
+            operaciones += f"{equivalencias[i]}/{equivalencias[i - 1]} * "
+        else:
+            operaciones += f"{equivalencias[i - 1]}/{equivalencias[i]} * "
+
+        i += 2
+
+    if operaciones:
+        return operaciones[:-3]
+
+    return ""
+
+
+def convertir_unidades_complejas(unidad: str, valor: float, unidad_a_convertir: str) -> str:
+    unidades_in = unidad.split("/")
+    if len(unidades_in) != 2:
+        raise ValueError("Unidad de entrada inválida")
+
+    unidades_out = unidad_a_convertir.split("/")
+    if len(unidades_out) != 2:
+        raise ValueError("Unidad de salida inválida")
+
+    # Se expresan solo las conversiones
+    cadena_de_conversiones_numerador = convertir_unidades(determinar_tipo_de_unidad(unidades_in[0]), unidades_in[0], valor,
+                                                          unidades_out[0], True)
+    cadena_de_conversiones_denominador = convertir_unidades(determinar_tipo_de_unidad(unidades_in[1]), unidades_in[1], valor,
+                                                            unidades_out[1], True)
+
+    convertir_numerador = unidades_in[0] != unidades_out[0]
+    convertir_denominador = unidades_in[1] != unidades_out[1]
+
+    conversion = ""
+
+    if convertir_numerador and not cadena_de_conversiones_numerador:
+        return ""
+    elif cadena_de_conversiones_numerador:
+        equivalencias_numerador = ensamblar_expresion(cadena_de_conversiones_numerador, True)
+        conversion = equivalencias_numerador
+
+    if convertir_denominador and not cadena_de_conversiones_denominador:
+        return ""
+    elif cadena_de_conversiones_denominador:
+        equivalencias_denominador = ensamblar_expresion(cadena_de_conversiones_denominador, False)
+        if not conversion:
+            conversion += f"{equivalencias_denominador}"
+        else:
+            conversion += f" * {equivalencias_denominador}"
+
+    entrada = f"{valor} {unidad}"
+
+    resultado = f"{entrada} = {entrada} * {conversion}"
+
+    conversion = conversion.replace(" ", "")
+    conversion = re.sub(r"[a-zA-Z]+", "", conversion)
+    conversion = f"{valor}*{conversion}"
+
+    resultado += "\n" + " " * len(entrada) + f" = %.4f {unidad_a_convertir}" % eval(conversion)
+
+    return resultado
+
+
+def procesar_entrada():
+    # Esta función, solo es para la interfaz CLI
+
+    utilidades.limpiar_pantalla()
+
+    print("Ingresa los datos a procesar [dato][unidad]")
+    dato_unidad = input("> ").replace(" ", "")
+
+    valor = re.findall(r"^-?\d*?.?\d+(?=[a-zA-Z])", dato_unidad)
+    if not valor:
+        raise KeyboardInterrupt("No hay un valor numérico")
+
+    unidad = dato_unidad.replace(valor[0], "")
+    if not unidad:
+        raise KeyboardInterrupt("No hay una unidad")
+
+    print("Ingresa la unidad a la que se convertirá")
+    unidad_a_convertir = input("> ")
+
+    if not unidad_a_convertir:
+        raise KeyboardInterrupt("No hay una unidad a convertir")
+
+    valor = float(valor[0])
+
+    if "/" in unidad:  # "Unidad compleja"
+        return convertir_unidades_complejas(unidad, valor, unidad_a_convertir)
+
+    return convertir_unidades(determinar_tipo_de_unidad(unidad), unidad, valor, unidad_a_convertir, False)
