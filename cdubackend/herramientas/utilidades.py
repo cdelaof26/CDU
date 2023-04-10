@@ -1,4 +1,5 @@
 from subprocess import call
+from pathlib import Path
 import sys
 import re
 
@@ -28,23 +29,29 @@ def limpiar_pantalla():
         call("clear", shell=True)
 
 
-def encontrar_argumentos():
+def encontrar_argumentos() -> dict:
     cmd = " ".join(sys.argv).replace(sys.argv[0], "")
 
-    argumentos = re.findall(r"-[\w ]+", cmd)
+    if "help" in cmd:
+        print("Unavailable option, please refer to backend_api.py for more information about available CLI args")
+        exit(1)
+
+    app_args = dict()
+    argumentos = re.findall(r"-[\w /.]+", cmd)
     argumento_invalido = ""
 
-    for i, argumento in enumerate(argumentos):
+    for argumento in argumentos:
         argumento = argumento.strip()
-
         if argumento.count(" ") > 1:
             argumento_invalido = argumento
             break
 
-        argumentos[i] = argumento.split(" ")
-        if len(argumentos[i]) != 2:
+        datos = argumento.split(" ")
+        if len(datos) != 2:
             argumento_invalido = argumento
             break
+
+        app_args[datos[0]] = datos[1]
 
         cmd = cmd.replace(argumento, "")
 
@@ -53,7 +60,7 @@ def encontrar_argumentos():
         print(f"    Error cerca de \"{argumento_invalido.strip()}\"")
         exit(1)
 
-    return argumentos
+    return app_args
 
 
 def seleccionar_opcion(opciones: list, valores=None):
@@ -90,5 +97,49 @@ def quitar_elemento_en_lista(lista: list, elemento) -> list:
     except IndexError:
         pass
 
-    # print("n", nueva_lista)
     return nueva_lista
+
+
+def escribir_archivo(ruta: Path, datos: str) -> bool:
+    try:
+        with open(ruta, "w") as archivo:
+            archivo.write(datos)
+            return True
+    except (IsADirectoryError, FileNotFoundError, UnicodeError):
+        return False
+
+
+def leer_archivo(ruta: Path) -> str:
+    if not ruta.exists():
+        return ""
+
+    try:
+        with open(ruta, "r") as archivo:
+            return archivo.read()
+    except (IsADirectoryError, UnicodeError):
+        return ""
+
+
+def eliminar_directorio(directorio: Path):
+    if directorio.exists():
+        archivos = list()
+        directorios_eliminables = list()
+        directorios = [directorio]
+
+        while directorios:
+            for elemento in directorios[0].iterdir():
+                if elemento.is_dir():
+                    directorios.append(elemento)
+                else:
+                    archivos.append(elemento)
+
+            directorios_eliminables.append(directorios[0])
+            directorios.pop(0)
+
+        for archivo in archivos:
+            archivo.unlink()
+
+        for dir in directorios_eliminables:
+            dir.rmdir()
+
+        directorio.rmdir()

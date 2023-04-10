@@ -97,11 +97,26 @@ $ cd python main.py
 </pre>
 
 
+### Desinstalación
+
+Para desinstalar CDU, utiliza la opción en preferencias para eliminar
+los datos de configuración, elimina el directorio del proyecto y/o el 
+ejecutable `.jar`
+
+
 ### Historial de cambios
+
+### v0.0.3 [10-04-23]
+- Implementado `Crear definición`
+- Implementado `P. Preferencias`
+- Se implemento la conversión de unidades a través de la API 
+  por línea de comando
+- Se agregó `manifest.mf` para la compilación en Java
+
 
 ### v0.0.2 [09-04-23]
 - Menu implementado
-  - La opción `1. Convertir datos` puede convertir datos de unidades
+  - La opción `Convertir datos` puede convertir datos de unidades
     simples y _complejas_ (derivadas)
 
 

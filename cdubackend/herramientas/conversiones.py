@@ -1,4 +1,5 @@
 import herramientas.utilidades as utilidades
+import herramientas.backend_api as b_api
 from enum import Enum
 import re
 
@@ -6,13 +7,17 @@ import re
 # Utilidades para el manejo de definiciones
 
 
-class TDU(Enum):  # Tipos De Unidades
-    MASA = 1
-    LONGITUD = 2
+class TDUF(Enum):  # Tipos De Unidades Fundamentales
+    LONGITUD = 1
+    MASA = 2
     TIEMPO = 3
+    CORRIENTE_ELECTRICA = 4
+    TEMPERATURA = 5
+    CANTIDAD_DE_SUSTANCIA = 6
+    INTENSIDAD_LUMINOSA = 7
 
 
-# Las definiciones son objetos que tienen cuatro atributos
+# Las definiciones son objetos que tienen cinco atributos
 # y permiten al programa "reconocer" cuáles son las equivalencias
 # entre unidades predefinidas y creadas por el usuario
 #
@@ -22,47 +27,55 @@ class TDU(Enum):  # Tipos De Unidades
 #       equivalencia de tiempo "1 día = 1440 minutos"
 #
 class Definicion:
-    def __init__(self, tipo: TDU, unidad: str, valor_en_unidad: float, unidad_equivalente: str,
-                 valor_en_unidad_equivalente: float):
+    def __init__(self, tipo: TDUF, unidad: str, valor: float, unidad_equivalente: str,
+                 valor_equivalente: float, definida_por_el_usuario: bool):
         self.tipo = tipo
         self.unidad = unidad
-        self.valor_en_unidad = valor_en_unidad
+        self.valor = valor
         self.unidad_equivalente = unidad_equivalente
-        self.valor_en_unidad_equivalente = valor_en_unidad_equivalente
+        self.valor_equivalente = valor_equivalente
+        self.definida_por_el_usuario = definida_por_el_usuario
+
+    def a_cadena(self):
+        if not b_api.FANCY_FORMAT:
+            return f"Definicion({self.tipo}, \"{self.unidad}\", {self.valor}, \"{self.unidad_equivalente}\", " \
+                   f"{self.valor_equivalente})"
+
+        return f"{self.valor} {self.unidad} -> {self.valor_equivalente} {self.unidad_equivalente}"
 
 
 # Definiciones elementales
 definiciones = [
     # Unidades de longitud
-    Definicion(TDU.LONGITUD, "km", 1, "m", 1000),
-    Definicion(TDU.LONGITUD, "m", 1, "cm", 100),
-    Definicion(TDU.LONGITUD, "cm", 1, "mm", 10),
+    Definicion(TDUF.LONGITUD, "km", 1, "m", 1000, False),
+    Definicion(TDUF.LONGITUD, "m", 1, "cm", 100, False),
+    Definicion(TDUF.LONGITUD, "cm", 1, "mm", 10, False),
     #  Sistema anglosajón
-    Definicion(TDU.LONGITUD, "mi", 1, "km", 1.609344),
-    Definicion(TDU.LONGITUD, "ft", 1, "m", 0.3048),
-    Definicion(TDU.LONGITUD, "ft", 1, "cm", 30.48),
-    Definicion(TDU.LONGITUD, "yd", 1, "ft", 3),
-    Definicion(TDU.LONGITUD, "yd", 1, "cm", 91.44),
-    Definicion(TDU.LONGITUD, "in", 1, "cm", 2.54),
+    Definicion(TDUF.LONGITUD, "mi", 1, "km", 1.609344, False),
+    Definicion(TDUF.LONGITUD, "ft", 1, "m", 0.3048, False),
+    Definicion(TDUF.LONGITUD, "ft", 1, "cm", 30.48, False),
+    Definicion(TDUF.LONGITUD, "yd", 1, "ft", 3, False),
+    Definicion(TDUF.LONGITUD, "yd", 1, "cm", 91.44, False),
+    Definicion(TDUF.LONGITUD, "in", 1, "cm", 2.54, False),
 
     # Unidades de masa
-    Definicion(TDU.MASA, "kg", 1, "g", 1000),
-    Definicion(TDU.MASA, "g", 1, "mg", 1000),
+    Definicion(TDUF.MASA, "kg", 1, "g", 1000, False),
+    Definicion(TDUF.MASA, "g", 1, "mg", 1000, False),
     #  Sistema anglosajón
-    Definicion(TDU.MASA, "oz", 1, "g", 28.3495),
-    Definicion(TDU.MASA, "lb", 1, "g", 453.5923),
+    Definicion(TDUF.MASA, "oz", 1, "g", 28.3495, False),
+    Definicion(TDUF.MASA, "lb", 1, "g", 453.5923, False),
 
     # Unidades de tiempo
-    Definicion(TDU.TIEMPO, "y", 1, "d", 365),
-    Definicion(TDU.TIEMPO, "w", 1, "d", 7),
-    Definicion(TDU.TIEMPO, "d", 1, "h", 24),
-    Definicion(TDU.TIEMPO, "h", 1, "min", 60),
-    Definicion(TDU.TIEMPO, "min", 1, "s", 60),
-    Definicion(TDU.TIEMPO, "s", 1, "ms", 1000)
+    Definicion(TDUF.TIEMPO, "y", 1, "d", 365, False),
+    Definicion(TDUF.TIEMPO, "w", 1, "d", 7, False),
+    Definicion(TDUF.TIEMPO, "d", 1, "h", 24, False),
+    Definicion(TDUF.TIEMPO, "h", 1, "min", 60, False),
+    Definicion(TDUF.TIEMPO, "min", 1, "s", 60, False),
+    Definicion(TDUF.TIEMPO, "s", 1, "ms", 1000, False)
 ]
 
 
-def enlistar_unidades_de(tipo: TDU) -> list:
+def enlistar_unidades_de(tipo: TDUF) -> list:
     global definiciones
 
     unidades = list()
@@ -88,7 +101,7 @@ def determinar_tipo_de_unidad(unidad: str):
     raise ValueError("Unidad desconocida")
 
 
-def permutar_unidades(tipo: TDU, longitud_del_elemento: int, unidad_inicial: str, unidad_final: str) -> list:
+def permutar_unidades(tipo: TDUF, longitud_del_elemento: int, unidad_inicial: str, unidad_final: str) -> list:
     unidades0 = enlistar_unidades_de(tipo)
     try:
         unidades0.remove(unidad_inicial)
@@ -124,31 +137,31 @@ def permutar_unidades(tipo: TDU, longitud_del_elemento: int, unidad_inicial: str
     return permutaciones
 
 
-def convertir_directo(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str):
+def convertir_directo(tipo: TDUF, unidad: str, valor: float, unidad_a_convertir: str):
     for definicion in definiciones:
         if tipo == definicion.tipo:
             if unidad == definicion.unidad and unidad_a_convertir == definicion.unidad_equivalente:
-                return valor / definicion.valor_en_unidad * definicion.valor_en_unidad_equivalente
+                return valor / definicion.valor * definicion.valor_equivalente
             if unidad == definicion.unidad_equivalente and unidad_a_convertir == definicion.unidad:
-                return valor * definicion.valor_en_unidad / definicion.valor_en_unidad_equivalente
+                return valor * definicion.valor / definicion.valor_equivalente
 
     return None
 
 
-def expresar_conversion_directa(tipo: TDU, unidad: str, unidad_a_convertir: str):
+def expresar_conversion_directa(tipo: TDUF, unidad: str, unidad_a_convertir: str):
     for definicion in definiciones:
         if tipo == definicion.tipo:
             if unidad == definicion.unidad and unidad_a_convertir == definicion.unidad_equivalente:
-                return f"{definicion.valor_en_unidad} {unidad} " \
-                       f"-> {definicion.valor_en_unidad_equivalente} {unidad_a_convertir}"
+                return f"{definicion.valor} {unidad} " \
+                       f"-> {definicion.valor_equivalente} {unidad_a_convertir}"
             if unidad_a_convertir == definicion.unidad and unidad == definicion.unidad_equivalente:
                 return f"1 {definicion.unidad} " \
-                       f"-> {definicion.valor_en_unidad / definicion.valor_en_unidad_equivalente} {definicion.unidad_equivalente}"
+                       f"-> {definicion.valor / definicion.valor_equivalente} {definicion.unidad_equivalente}"
 
     return
 
 
-def convertir_unidades_directo(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str):
+def convertir_unidades_directo(tipo: TDUF, unidad: str, valor: float, unidad_a_convertir: str):
     conversion_directa = convertir_directo(tipo, unidad, valor, unidad_a_convertir)
 
     if conversion_directa is not None:
@@ -162,7 +175,7 @@ def convertir_unidades_directo(tipo: TDU, unidad: str, valor: float, unidad_a_co
     return
 
 
-def aplicar_conversiones_seguidas(tipo: TDU, unidad: str, unidades: str,
+def aplicar_conversiones_seguidas(tipo: TDUF, unidad: str, unidades: str,
                                   solo_expresar: bool, valor=None, unidad_a_convertir=None) -> str:
     operaciones = ""
     valor_convertido = float(valor)
@@ -196,14 +209,19 @@ def aplicar_conversiones_seguidas(tipo: TDU, unidad: str, unidades: str,
     return operaciones
 
 
-def convertir_unidades(tipo: TDU, unidad: str, valor: float, unidad_a_convertir: str, solo_expresar: bool) -> str:
+def convertir_unidades(tipo: TDUF, unidad: str, valor: float, unidad_a_convertir: str, solo_expresar: bool) -> str:
     if solo_expresar:
         conversion = expresar_conversion_directa(tipo, unidad, unidad_a_convertir)
     else:
         conversion = convertir_unidades_directo(tipo, unidad, valor, unidad_a_convertir)
 
-    if conversion is not None and not solo_expresar:
-        return f"{valor} {unidad} son {conversion} {unidad_a_convertir}"
+    if conversion is not None and not solo_expresar:  # Oops, no de los códigos más bonitos que he hecho...
+        if b_api.FANCY_FORMAT:
+            if float(conversion).is_integer():
+                return f"{valor} {unidad} son {conversion} {unidad_a_convertir}"
+            return f"{valor} {unidad} son %.4f {unidad_a_convertir}" % conversion
+
+        return f"{valor} {unidad} -> {conversion} {unidad_a_convertir}"
     elif conversion is not None:
         return conversion
 
@@ -215,8 +233,9 @@ def convertir_unidades(tipo: TDU, unidad: str, valor: float, unidad_a_convertir:
         for permutacion in permutaciones:
             # Con las permutaciones posibles se intenta hacer las conversiones
             # como las indica la propia permutación
-            operaciones = aplicar_conversiones_seguidas(tipo, unidad, permutacion, solo_expresar,
-                                                        valor=valor, unidad_a_convertir=unidad_a_convertir)
+            operaciones = aplicar_conversiones_seguidas(
+                tipo, unidad, permutacion, solo_expresar, valor=valor, unidad_a_convertir=unidad_a_convertir
+            )
 
             if operaciones:
                 break
@@ -303,12 +322,10 @@ def convertir_unidades_complejas(unidad: str, valor: float, unidad_a_convertir: 
     return resultado
 
 
-def procesar_entrada():
-    # Esta función, solo es para la interfaz CLI
+def obtener_dato_unidad(msg: str) -> tuple:
+    # Esta función solo es para la interfaz CLI
 
-    utilidades.limpiar_pantalla()
-
-    print("Ingresa los datos a procesar [dato][unidad]")
+    print(msg)
     dato_unidad = input("> ").replace(" ", "")
 
     valor = re.findall(r"^-?\d*?.?\d+(?=[a-zA-Z])", dato_unidad)
@@ -319,13 +336,21 @@ def procesar_entrada():
     if not unidad:
         raise KeyboardInterrupt("No hay una unidad")
 
+    return float(valor[0]), unidad
+
+
+def procesar_entrada():
+    # Esta función solo es para la interfaz CLI
+
+    utilidades.limpiar_pantalla()
+
+    valor, unidad = obtener_dato_unidad("Ingresa el dato procesar seguido de la unidad")
+
     print("Ingresa la unidad a la que se convertirá")
     unidad_a_convertir = input("> ")
 
     if not unidad_a_convertir:
         raise KeyboardInterrupt("No hay una unidad a convertir")
-
-    valor = float(valor[0])
 
     if "/" in unidad:  # "Unidad compleja"
         return convertir_unidades_complejas(unidad, valor, unidad_a_convertir)

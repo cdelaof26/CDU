@@ -1,6 +1,8 @@
 import herramientas.utilidades as utilidades
 import herramientas.recuadro as recuadro
-import herramientas.definiciones as definiciones
+import herramientas.conversiones as conversiones
+import herramientas.backend_api as b_api
+import herramientas.datos_del_app as dda
 
 
 def mostrar_menu():
@@ -8,10 +10,9 @@ def mostrar_menu():
         ["    Bienvenido a CDUP    ",
          "  Menu",
          "1. Convertir datos",
-         # "2. Crear definición",
-         # "P. Preferencias",
-         "S. Salir"
-         ]
+         "2. Crear definición",
+         "P. Preferencias",
+         "S. Salir"]
     )
 
     while True:
@@ -24,41 +25,35 @@ def mostrar_menu():
             opcion = utilidades.seleccionar_opcion(["1", "2", "P", "S"])
 
             if opcion == "1":
-                resultado = definiciones.procesar_entrada()
+                resultado = conversiones.procesar_entrada()
                 if resultado:
                     print(resultado)
                 else:
                     print("    No fue posible convertir las unidades!")
                 input("  Presiona enter para continuar ")
 
+            if opcion == "2":
+                dda.crear_definicion()
+
+            if opcion == "P":
+                dda.mostrar_menu_de_configuracion()
+
             if opcion == "S":
                 break
         except (KeyboardInterrupt, ValueError) as e:
             print("\n    Proceso interrumpido!")
-            print("Causa:", e, "\n")
+            if str(e):
+                print("Causa:", e, "\n")
             input("  Presiona enter para continuar ")
 
     print("Bye")
 
 
-app_args = utilidades.encontrar_argumentos()
+dda.importar_definiciones()
 
-if not app_args:
+if not b_api.app_args:
     # Aplicación en Python (sin UI)
     mostrar_menu()
 else:
-    # Dado que es un proyecto "pequeño" que no creo compartir (y/o actualizar),
-    # no tengo pensado documentarlo (sección de ayuda de cmd)
-    modo_backend = False
-    for flag, arg in app_args:
-        if flag == "-m" and arg == "bd":
-            modo_backend = True
-            break
-
-    if not modo_backend:
-        print("Para ejecutar este software sin la interfaz gráfica utiliza:")
-        print("  Linux/macOS")
-        print("    python3 main.py")
-        print("  Windows")
-        print("    python main.py")
-        exit(1)
+    # Las opciones disponibles se encuentran en backend_api.py
+    b_api.ejecutar_funcion()
