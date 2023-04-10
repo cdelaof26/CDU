@@ -80,7 +80,7 @@ def mostrar_menu_de_configuracion():
     menu = recuadro.crear_recuadro(
         ["  Ajustes    ",
          "1. Eliminar definición",
-         "2. Eliminar todas las definiciones",
+         "2. Eliminar todos los datos de configuración",
          "S. Salir"
          ]
     )
@@ -124,7 +124,7 @@ def mostrar_menu_de_configuracion():
                     continue
 
                 print("¿Estás seguro?")
-                print("1. Si, eliminar todas las definiciones")
+                print("1. Si, eliminar todos los datos de configuración")
                 print("2. No, cancelar")
                 print("Selecciona una opción")
                 if utilidades.seleccionar_opcion(["1", "2"], [True, False]):

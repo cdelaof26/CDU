@@ -106,10 +106,16 @@ ejecutable `.jar`
 
 ### Historial de cambios
 
+### v0.0.4 [10-04-23]
+- Agregada interfaz en Java (early) y Logger simple
+- Agregada verificación de dependencias y copia de CDUP al directorio
+  del usuario
+
+
 ### v0.0.3 [10-04-23]
 - Implementado `Crear definición`
 - Implementado `P. Preferencias`
-- Se implemento la conversión de unidades a través de la API 
+- Se implementó la conversión de unidades a través de la API 
   por línea de comando
 - Se agregó `manifest.mf` para la compilación en Java
 
@@ -129,4 +135,4 @@ ejecutable `.jar`
 
 - Proyecto inicial
   - Por ahora solo es posible hacer conversiones de unidades 
-    elementales y por medio de la modificación del programa
+    elementales por medio de la modificación del programa
