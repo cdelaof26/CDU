@@ -36,10 +36,11 @@ class Definicion:
         self.valor_equivalente = valor_equivalente
         self.definida_por_el_usuario = definida_por_el_usuario
 
-    def a_cadena(self):
-        if not b_api.FANCY_FORMAT:
-            return f"Definicion({self.tipo}, \"{self.unidad}\", {self.valor}, \"{self.unidad_equivalente}\", " \
-                   f"{self.valor_equivalente})"
+    def a_cadena(self, forzar_no_fancy=False, forzar_fancy=False):
+        if not forzar_fancy:
+            if not b_api.FANCY_FORMAT or forzar_no_fancy:
+                return f"Definicion({self.tipo}, \"{self.unidad}\", {self.valor}, \"{self.unidad_equivalente}\", " \
+                       f"{self.valor_equivalente})"
 
         return f"{self.valor} {self.unidad} -> {self.valor_equivalente} {self.unidad_equivalente}"
 
@@ -73,6 +74,8 @@ definiciones = [
     Definicion(TDUF.TIEMPO, "min", 1, "s", 60, False),
     Definicion(TDUF.TIEMPO, "s", 1, "ms", 1000, False)
 ]
+
+DEFINICIONES_HARD_CODED = len(definiciones)
 
 
 def enlistar_unidades_de(tipo: TDUF) -> list:

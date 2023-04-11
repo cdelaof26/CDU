@@ -8,6 +8,7 @@ import re
 
 DIRECTORIO_DE_DATOS = Path.home().joinpath(".cdu_data")
 ARCHIVO_DE_DEFINICIONES = DIRECTORIO_DE_DATOS.joinpath("user_constants.txt")
+USAR_TEMA_OSCURO = DIRECTORIO_DE_DATOS.joinpath("use_dark")
 
 
 def importar_definiciones():
@@ -26,7 +27,7 @@ def guardar_definiciones():
     definiciones = ""
     for definicion in conversiones.definiciones:
         if definicion.definida_por_el_usuario:
-            definiciones += definicion.a_cadena() + "\n"
+            definiciones += definicion.a_cadena(True) + "\n"
 
     utilidades.escribir_archivo(ARCHIVO_DE_DEFINICIONES, definiciones[:-1])
 
@@ -137,3 +138,21 @@ def mostrar_menu_de_configuracion():
             if str(e):
                 print("Causa:", e, "\n")
             input("  Presiona enter para continuar ")
+
+
+def cambiar_tema():
+    global USAR_TEMA_OSCURO
+
+    if USAR_TEMA_OSCURO.exists():
+        USAR_TEMA_OSCURO.unlink()
+    else:
+        USAR_TEMA_OSCURO.touch()
+
+
+def obtener_tema_preferido():
+    global USAR_TEMA_OSCURO
+
+    if USAR_TEMA_OSCURO.exists():
+        print("Dark")
+    else:
+        print("Light")

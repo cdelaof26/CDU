@@ -6,27 +6,30 @@ package cdu.utils;
  */
 public class CDULogger {
     public enum TipoDeDato {
-        EMPTY, GRAVE, ERROR, INFO, TRACE
+        UNK, EMPTY, GRAVE, ERROR, INFO, TRACE
     }
     
     private static String registro = "";
     
-    public static void imprimirInfo(TipoDeDato tipo, String mensaje) {
+    public static void imprimirMensaje(TipoDeDato tipo, String mensaje) {
         switch(tipo) {
+            case UNK:
+                mensaje = "[UNK]   " + mensaje + " ";
+            break;
             case EMPTY:
                 mensaje = "";
             break;
             case GRAVE:
-                mensaje = "[GRAVE] " + mensaje;
+                mensaje = "[GRAVE] " + mensaje + " ";
             break;
             case ERROR:
-                mensaje = "[ERROR] " + mensaje;
+                mensaje = "[ERROR] " + mensaje + " ";
             break;
             case INFO:
-                mensaje = "[INFO]  " + mensaje;
+                mensaje = "[INFO]  " + mensaje + " ";
             break;
             case TRACE:
-                mensaje = "[TRACE]     " + mensaje;
+                mensaje = "[TRACE]     " + mensaje + " ";
             break;
         }
         
@@ -35,9 +38,14 @@ public class CDULogger {
     }
 
     public static void imprimirExcepcion(Exception e) {
-        imprimirInfo(TipoDeDato.ERROR, e.getMessage());
+        imprimirMensaje(TipoDeDato.ERROR, e.getMessage());
         for (StackTraceElement trace : e.getStackTrace())
-            imprimirInfo(TipoDeDato.TRACE, trace.toString());
+            imprimirMensaje(TipoDeDato.TRACE, trace.toString());
+    }
+    
+    public static void imprimirMensajeMultilinea(TipoDeDato tipo, String mensaje) {
+        for (String linea : mensaje.split("\n"))
+            imprimirMensaje(tipo, linea);
     }
     
     public static String getRegistro() {

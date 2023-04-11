@@ -1,6 +1,7 @@
 package cdu.utils;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -8,25 +9,26 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import javax.swing.UIManager;
 
 /**
- * Esta clase contiene utilidades y constantes para el manejo de la app
+ * Esta clase contiene utilidades para el manejo de la app
  * 
  * @author cristopher
  */
 public class AppUtils {
-    public static String systemName = System.getProperty("os.name"); // Nombre del sistema
-    public static final String systemAnchor = (systemName.charAt(0) == 'W' || systemName.charAt(0) == 'w') ? "\\" : "/"; // Separador de rutas
+    public static final String SYSTEM_NAME = System.getProperty("os.name"); // Nombre del sistema
+    public static final String SYSTEM_ANCHOR = (SYSTEM_NAME.charAt(0) == 'W' || SYSTEM_NAME.charAt(0) == 'w') ? "\\" : "/"; // Separador de rutas
     
-    public static final String userHome = System.getProperty("user.home");  // Ruta de los datos del usuario
+    public static final String USER_HOME = System.getProperty("user.home");  // Ruta de los datos del usuario
     
-    public static File rutaDelBackend = new File(unirRutas(userHome, ".cdu_data"));
+    public static File rutaDelBackend = new File(unirRutas(USER_HOME, ".cdu_data"));
     
     public static String [] DIRECTORIOS_DE_PYTHON = {"herramientas"};
     public static String [] ARCHIVOS_PY_EN_HERRAMIENTAS = {"__init__.py", "backend_api.py", "conversiones.py", "datos_del_app.py", "recuadro.py", "utilidades.py"};
     public static String [] ARCHIVOS_EN_CDUBACKEND = {"main.py"};
     
-    public static String comandoDePython = "python3";
+    public static final String COMANDO_DE_PYTHON = SYSTEM_ANCHOR.equals("\\") ? "python" : "python3";
     
     
     public static boolean usarTemaOscuro = false;
@@ -44,13 +46,19 @@ public class AppUtils {
     public static Color APP_BG_A_COLOR = LIGHT_BG_A;
     public static Color APP_FG_COLOR = LIGHT_FG;
     
+    public static final String NOMBRE_DE_LA_FUENTE = SYSTEM_ANCHOR.equals("\\") ? "Arial" : SYSTEM_NAME.charAt(0) == 'M' ? "Helvetica Neue" : "";
+    
+    public static Font fondoEstandar = new Font(NOMBRE_DE_LA_FUENTE, Font.PLAIN, 13);
+    public static Font fondoXL = new Font(NOMBRE_DE_LA_FUENTE, Font.BOLD, 24);
+    public static Font fondoXXL = new Font(NOMBRE_DE_LA_FUENTE, Font.BOLD, 32);
+    
     
     public static String unirRutas(String base, String ... rutas) {
         for (String ruta : rutas) {
-            if (base.endsWith(systemAnchor))
+            if (base.endsWith(SYSTEM_ANCHOR))
                 base += ruta;
             else
-                base += systemAnchor + ruta;
+                base += SYSTEM_ANCHOR + ruta;
         }
         
         return base;
@@ -72,7 +80,7 @@ public class AppUtils {
                 linea = buffReader.readLine();
             }
         } catch (IOException | NullPointerException ex) {
-            CDULogger.imprimirInfo(CDULogger.TipoDeDato.ERROR, "Error al leer archivo en flujo de datos (buffered)");
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Error al leer archivo en flujo de datos (buffered)");
             CDULogger.imprimirExcepcion(ex);
         }
         
@@ -97,7 +105,7 @@ public class AppUtils {
             
             operacionExitosa = true;
         } catch (IOException ex) {
-            CDULogger.imprimirInfo(CDULogger.TipoDeDato.ERROR, "Error al escribir " + archivo.getAbsolutePath());
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Error al escribir " + archivo.getAbsolutePath());
             CDULogger.imprimirExcepcion(ex);
         }
         
@@ -146,34 +154,31 @@ public class AppUtils {
     
     public static boolean pythonEstaInstalado() {
         try {
-            Process process = Runtime.getRuntime().exec("python3");
+            Process process = Runtime.getRuntime().exec(COMANDO_DE_PYTHON);
             process.destroy();
-            return true;
-        } catch (IOException e) { }
-        
-        try {
-            Process process = Runtime.getRuntime().exec("python");
-            process.destroy();
-            
-            comandoDePython = "python";
             return true;
         } catch (IOException e) { }
         
         return false;
     }
     
-    public static void cambiarTema() {
+    public static void cambiarTema(boolean soloUI) {
         usarTemaOscuro = !usarTemaOscuro;
         
         if (usarTemaOscuro) {
             APP_BG_COLOR = DARK_BG;
             APP_BG_A_COLOR = DARK_BG_A;
             APP_FG_COLOR = DARK_FG;
+            UIManager.put("Button.select", Color.GRAY);
         } else {
             APP_BG_COLOR = LIGHT_BG;
             APP_BG_A_COLOR = LIGHT_BG_A;
             APP_FG_COLOR = LIGHT_FG;
+            UIManager.put("Button.select", Color.LIGHT_GRAY);
         }
+        
+        if (!soloUI)
+            ejecutarScript("-m", "man", "-theme", "toggle").start();
     }
     
     public static ScriptRunner ejecutarScript(String ... args) {
@@ -188,6 +193,9 @@ public class AppUtils {
         private final String [] args;
         private String salida = "";
         private int codigoDeSalida = -1;
+        private boolean ejecutando = true;
+        
+        private Process proceso;
 
         public ScriptRunner(String [] args) {
             this.args = args;
@@ -195,24 +203,71 @@ public class AppUtils {
         
         @Override
         public void run() {
+            ejecutando = true;
+            
             try {
-                String comando = comandoDePython + " main.py " + concatenarArgumentos();
+                String comando = COMANDO_DE_PYTHON + " main.py " + concatenarArgumentos();
                 
-                Process proceso = Runtime.getRuntime().exec(comando, null, rutaDelBackend);
+                proceso = Runtime.getRuntime().exec(comando, null, rutaDelBackend);
+                
+                while (proceso.isAlive()) {
+                    try {
+                        leerDatosDeSalidaDelProceso();
+                    } catch (InterruptedException | IOException | NullPointerException ex) {}
+                    
+                    try { sleep(100); } catch (InterruptedException ex) { }
+                }
                 
                 codigoDeSalida = proceso.waitFor();
-                
-                BufferedReader reader = new BufferedReader(new InputStreamReader(proceso.getInputStream()));
+            } catch (IOException | InterruptedException ex) {
+                CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Error al ejecutar script");
+                CDULogger.imprimirExcepcion(ex);
+            }
+            
+            ejecutando = false;
+        }
+        
+        private void leerDatosDeSalidaDelProceso() throws InterruptedException, IOException, NullPointerException {
+            int timeout = 0;
+            
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
+                while (!reader.ready()) {
+                    try { sleep(100); } catch (InterruptedException ex) { }
+                    timeout++;
+                    
+                    if (!reader.ready() && timeout == 5) {
+                        throw new InterruptedException("Tiempo de espera terminado");
+                    }
+                }
                 
                 String linea = reader.readLine();
                 while(linea != null) {
                     salida += linea + "\n";
                     linea = reader.readLine();
                 }
-            } catch (IOException | InterruptedException ex) {
-                CDULogger.imprimirInfo(CDULogger.TipoDeDato.ERROR, "Error al ejecutar script");
-                CDULogger.imprimirExcepcion(ex);
             }
+            
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(proceso.getErrorStream()))) {
+                while (!reader.ready()) {
+                    try { sleep(100); } catch (InterruptedException ex) { }
+                    timeout++;
+                    
+                    if (!reader.ready() && timeout == 5) {
+                        throw new InterruptedException("Tiempo de espera terminado");
+                    }
+                }
+                
+                String linea = reader.readLine();
+                while(linea != null) {
+                    salida += linea + "\n";
+                    linea = reader.readLine();
+                }
+            }
+        }
+        
+        private void terminarProceso() {
+            if (proceso != null && proceso.isAlive())
+                proceso.destroy();
         }
         
         private String concatenarArgumentos() {
@@ -224,11 +279,18 @@ public class AppUtils {
         }
 
         public String getSalida() {
+            if (!salida.isEmpty())
+                return (String) salida.subSequence(0, salida.length() - 1);
+            
             return salida;
         }
 
         public int getCodigoDeSalida() {
             return codigoDeSalida;
+        }
+
+        public boolean estaEjecutandose() {
+            return ejecutando;
         }
     }
 }

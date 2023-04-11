@@ -8,19 +8,28 @@ import herramientas.utilidades as utilidades
 app_args = utilidades.encontrar_argumentos()
 FANCY_FORMAT = True
 
-# Available flags
-# -m:       Mode-Values: conv, man, add, rm
+# Mini doc
+#   Available flags
+# -m:       Mode-Values: conv, man, get
 # -in:      Input data
 # -in_u:    Input unit
 # -out_u:   Output unit
-# -s:       Setting name; Compatible with man, add and rm
+# -s:       Setting name
+# -theme:   Theme-Values: get, toggle
+# -rm:      Remove-Values: definition, all_data
+# -add:     Add-Values: String data
+# -id:      Index: integer value
 #
 #   Usage: python3 main.py -flag [data]
 #
-# conv: Convert mode
-# man:  Manage mode
-# add:  Add definition mode
-# rm:   Remove definition mode
+# Modes
+#   conv: Convert mode
+#        Flags: -in, -in_u, -out_u
+#
+#   man:  Manage mode
+#        Flags: -theme, -add, -rm, -id
+#
+#   get:  Get definitions
 #
 
 
@@ -73,6 +82,8 @@ def ejecutar_funcion():
         print("    python main.py")
         exit(1)
 
+    import herramientas.datos_del_app as dda
+
     if modo == "conv":
         # Los datos vienen como
         #   0. Valor
@@ -99,8 +110,36 @@ def ejecutar_funcion():
             print("NO_DATA")
             exit(1)
     elif modo == "man":
-        pass
-    elif modo == "add":
-        pass
-    elif modo == "rm":
-        pass
+        if "-theme" in app_args:
+            if app_args["-theme"] == "toggle":
+                dda.cambiar_tema()
+                exit(0)
+            elif app_args["-theme"] == "get":
+                dda.obtener_tema_preferido()
+                exit(0)
+
+            print("NO_DATA")
+            exit(1)
+
+        if "-rm" in app_args:
+            if app_args["-rm"] == "all_data":
+                utilidades.eliminar_directorio(dda.DIRECTORIO_DE_DATOS)
+                exit(0)
+            if app_args["-rm"] == "definition":
+                if "-id" in app_args:
+                    try:
+                        index = int(app_args["-id"]) + conversiones.DEFINICIONES_HARD_CODED
+                        if 0 < index < len(conversiones.definiciones):
+                            conversiones.definiciones.pop(index)
+                            dda.guardar_definiciones()
+                            exit(0)
+                    except ValueError:
+                        exit(1)
+    elif modo == "get":
+        for definicion in conversiones.definiciones:
+            if definicion.definida_por_el_usuario:
+                print(definicion.a_cadena(forzar_fancy=True))
+
+        exit(0)
+
+    exit(1)

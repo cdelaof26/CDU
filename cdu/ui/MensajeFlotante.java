@@ -38,8 +38,10 @@ public class MensajeFlotante extends JDialog {
         this.setLocationRelativeTo(null);
         this.add(contenedor);
         this.setModalityType(JDialog.ModalityType.APPLICATION_MODAL);
+        this.setAlwaysOnTop(true);
+        this.setResizable(false);
         
-        titulo.setFont(new Font(titulo.getFont().getFontName(), Font.BOLD, 32));
+        titulo.setFont(AppUtils.fondoXXL);
         titulo.setText(tipoDeMensaje.name());
         
         texto.setText(mensaje);
@@ -53,6 +55,7 @@ public class MensajeFlotante extends JDialog {
         aceptar.setPreferredSize(new Dimension(120, 22));
         aceptar.setBorder(null);
         aceptar.setFocusPainted(false);
+        aceptar.setFont(AppUtils.fondoEstandar);
         aceptar.addActionListener((Action) -> {
             setVisible(false);
         });
@@ -90,6 +93,7 @@ public class MensajeFlotante extends JDialog {
         
         titulo.setForeground(AppUtils.APP_FG_COLOR);
         texto.setForeground(AppUtils.APP_FG_COLOR);
+        aceptar.setForeground(AppUtils.APP_FG_COLOR);
     }
     
     public void mostrarMensaje(String mensaje, CDULogger.TipoDeDato tipoDeMensaje) {

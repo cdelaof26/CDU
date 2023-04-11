@@ -7,6 +7,7 @@ import javax.swing.JButton;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 
 /**
+ * Barras de scroll minimalistas y con colores
  *
  * @author cristopher
  */

@@ -139,7 +139,6 @@ def eliminar_directorio(directorio: Path):
         for archivo in archivos:
             archivo.unlink()
 
-        for dir in directorios_eliminables:
-            dir.rmdir()
-
-        directorio.rmdir()
+        while directorios_eliminables:
+            directorios_eliminables[-1].rmdir()
+            directorios_eliminables = directorios_eliminables[:-1]

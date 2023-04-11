@@ -106,6 +106,14 @@ ejecutable `.jar`
 
 ### Historial de cambios
 
+### v0.0.5 [10-04-23]
+- Interfaz más funcional
+  - Agregado preferencias
+    - Se pueden eliminar las definiciones creadas
+    - Se puede cambiar el tema de la aplicación
+  - La creación de espacios es parcialmente funcional
+
+
 ### v0.0.4 [10-04-23]
 - Agregada interfaz en Java (early) y Logger simple
 - Agregada verificación de dependencias y copia de CDUP al directorio
