@@ -59,7 +59,7 @@ def crear_definicion():
     print("Selecciona de que tipo sera la equivalencia")
     seleccion = utilidades.seleccionar_opcion(opciones, list(conversiones.TDUF))
 
-    valor, unidad = conversiones.obtener_dato_unidad("Ingresa el valor seguido de la unidad")
+    valor, unidad = conversiones.obtener_dato_unidad("Ingresa el valor seguido de la unidad (ej. 1km)")
     valor_equivalente, unidad_equivalente = conversiones.obtener_dato_unidad(
         "Ingresa el valor equivalente seguido de la unidad"
     )

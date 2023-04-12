@@ -4,7 +4,6 @@ import cdu.utils.AppUtils;
 import cdu.utils.CDULogger;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;

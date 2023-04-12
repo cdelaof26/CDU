@@ -42,7 +42,7 @@ class Definicion:
                 return f"Definicion({self.tipo}, \"{self.unidad}\", {self.valor}, \"{self.unidad_equivalente}\", " \
                        f"{self.valor_equivalente})"
 
-        return f"{self.valor} {self.unidad} -> {self.valor_equivalente} {self.unidad_equivalente}"
+        return f"[{self.tipo.name}] {self.valor} {self.unidad} -> {self.valor_equivalente} {self.unidad_equivalente}"
 
 
 # Definiciones elementales
@@ -178,17 +178,22 @@ def convertir_unidades_directo(tipo: TDUF, unidad: str, valor: float, unidad_a_c
     return
 
 
-def aplicar_conversiones_seguidas(tipo: TDUF, unidad: str, unidades: str,
-                                  solo_expresar: bool, valor=None, unidad_a_convertir=None) -> str:
-    operaciones = ""
+def aplicar_conversiones_seguidas(tipo: TDUF, unidad: str, unidades: str, solo_expresar: bool,
+                                  conversion_compleja: bool, valor=None) -> str:
+
     valor_convertido = float(valor)
+    if b_api.FANCY_FORMAT or conversion_compleja:
+        operaciones = ""
+    else:
+        operaciones = [f"%.4f {unidad}" % valor_convertido]
 
     for nueva_unidad in unidades[1:]:
         if not solo_expresar:
-            if valor_convertido.is_integer():
-                operaciones += f"Convierte {int(valor_convertido)} {unidad} a {nueva_unidad}\n"
-            else:
-                operaciones += f"Convierte %.4f {unidad} a {nueva_unidad}\n" % valor_convertido
+            if b_api.FANCY_FORMAT:
+                if valor_convertido.is_integer():
+                    operaciones += f"Convierte {int(valor_convertido)} {unidad} a {nueva_unidad}\n"
+                else:
+                    operaciones += f"Convierte %.4f {unidad} a {nueva_unidad}\n" % valor_convertido
 
         if solo_expresar:
             resultado = expresar_conversion_directa(tipo, unidad, nueva_unidad)
@@ -204,15 +209,22 @@ def aplicar_conversiones_seguidas(tipo: TDUF, unidad: str, unidades: str,
         if solo_expresar:
             operaciones += resultado + ";"
         else:
-            if valor_convertido.is_integer():
-                operaciones += f"   Resultado: {int(valor_convertido)} {nueva_unidad}\n"
+            if b_api.FANCY_FORMAT:
+                if valor_convertido.is_integer():
+                    operaciones += f"   Resultado: {int(valor_convertido)} {nueva_unidad}\n"
+                else:
+                    operaciones += f"   Resultado: %.4f {nueva_unidad}\n" % valor_convertido
             else:
-                operaciones += f"   Resultado: %.4f {nueva_unidad}\n" % valor_convertido
+                operaciones.append(f"%.4f {nueva_unidad}" % valor_convertido)
+
+    if not b_api.FANCY_FORMAT and not conversion_compleja:
+        return " -> ".join(operaciones) + "\n"
 
     return operaciones
 
 
-def convertir_unidades(tipo: TDUF, unidad: str, valor: float, unidad_a_convertir: str, solo_expresar: bool) -> str:
+def convertir_unidades(tipo: TDUF, unidad: str, valor: float,
+                       unidad_a_convertir: str, solo_expresar: bool, conversion_compleja: bool) -> str:
     if solo_expresar:
         conversion = expresar_conversion_directa(tipo, unidad, unidad_a_convertir)
     else:
@@ -224,7 +236,7 @@ def convertir_unidades(tipo: TDUF, unidad: str, valor: float, unidad_a_convertir
                 return f"{valor} {unidad} son {conversion} {unidad_a_convertir}"
             return f"{valor} {unidad} son %.4f {unidad_a_convertir}" % conversion
 
-        return f"{valor} {unidad} -> {conversion} {unidad_a_convertir}"
+        return f"{conversion} {unidad_a_convertir}"
     elif conversion is not None:
         return conversion
 
@@ -237,7 +249,7 @@ def convertir_unidades(tipo: TDUF, unidad: str, valor: float, unidad_a_convertir
             # Con las permutaciones posibles se intenta hacer las conversiones
             # como las indica la propia permutación
             operaciones = aplicar_conversiones_seguidas(
-                tipo, unidad, permutacion, solo_expresar, valor=valor, unidad_a_convertir=unidad_a_convertir
+                tipo, unidad, permutacion, solo_expresar, conversion_compleja, valor=valor
             )
 
             if operaciones:
@@ -287,10 +299,10 @@ def convertir_unidades_complejas(unidad: str, valor: float, unidad_a_convertir: 
         raise ValueError("Unidad de salida inválida")
 
     # Se expresan solo las conversiones
-    cadena_de_conversiones_numerador = convertir_unidades(determinar_tipo_de_unidad(unidades_in[0]), unidades_in[0], valor,
-                                                          unidades_out[0], True)
-    cadena_de_conversiones_denominador = convertir_unidades(determinar_tipo_de_unidad(unidades_in[1]), unidades_in[1], valor,
-                                                            unidades_out[1], True)
+    cadena_de_conversiones_numerador = convertir_unidades(determinar_tipo_de_unidad(unidades_in[0]), unidades_in[0],
+                                                          valor, unidades_out[0], True, True)
+    cadena_de_conversiones_denominador = convertir_unidades(determinar_tipo_de_unidad(unidades_in[1]), unidades_in[1],
+                                                            valor, unidades_out[1], True, True)
 
     convertir_numerador = unidades_in[0] != unidades_out[0]
     convertir_denominador = unidades_in[1] != unidades_out[1]
@@ -314,13 +326,19 @@ def convertir_unidades_complejas(unidad: str, valor: float, unidad_a_convertir: 
 
     entrada = f"{valor} {unidad}"
 
-    resultado = f"{entrada} = {entrada} * {conversion}"
+    if b_api.FANCY_FORMAT:
+        resultado = f"{entrada} = {entrada} * {conversion}"
+    else:
+        resultado = f"{entrada} * {conversion}"
 
     conversion = conversion.replace(" ", "")
     conversion = re.sub(r"[a-zA-Z]+", "", conversion)
     conversion = f"{valor}*{conversion}"
 
-    resultado += "\n" + " " * len(entrada) + f" = %.4f {unidad_a_convertir}" % eval(conversion)
+    if b_api.FANCY_FORMAT:
+        resultado += "\n" + " " * len(entrada) + f" = %.4f {unidad_a_convertir}" % eval(conversion)
+    else:
+        resultado += f" = %.4f {unidad_a_convertir}" % eval(conversion)
 
     return resultado
 
@@ -347,7 +365,7 @@ def procesar_entrada():
 
     utilidades.limpiar_pantalla()
 
-    valor, unidad = obtener_dato_unidad("Ingresa el dato procesar seguido de la unidad")
+    valor, unidad = obtener_dato_unidad("Ingresa el dato procesar seguido de la unidad (ej. 1km)")
 
     print("Ingresa la unidad a la que se convertirá")
     unidad_a_convertir = input("> ")
@@ -358,4 +376,4 @@ def procesar_entrada():
     if "/" in unidad:  # "Unidad compleja"
         return convertir_unidades_complejas(unidad, valor, unidad_a_convertir)
 
-    return convertir_unidades(determinar_tipo_de_unidad(unidad), unidad, valor, unidad_a_convertir, False)
+    return convertir_unidades(determinar_tipo_de_unidad(unidad), unidad, valor, unidad_a_convertir, False, False)

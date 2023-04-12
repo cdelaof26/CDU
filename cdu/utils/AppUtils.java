@@ -2,6 +2,9 @@ package cdu.utils;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -51,6 +54,9 @@ public class AppUtils {
     public static Font fondoEstandar = new Font(NOMBRE_DE_LA_FUENTE, Font.PLAIN, 13);
     public static Font fondoXL = new Font(NOMBRE_DE_LA_FUENTE, Font.BOLD, 24);
     public static Font fondoXXL = new Font(NOMBRE_DE_LA_FUENTE, Font.BOLD, 32);
+    
+    private static final AffineTransform affinetransform = new AffineTransform();     
+    private static final FontRenderContext frc = new FontRenderContext(affinetransform, true, true);
     
     
     public static String unirRutas(String base, String ... rutas) {
@@ -162,6 +168,12 @@ public class AppUtils {
         return false;
     }
     
+    public static int [] obtenerLongitudDeTexto(String texto, Font fondo) {
+        Rectangle2D r2D = fondo.getStringBounds(texto, frc);
+        
+        return new int []{(int) r2D.getWidth(), (int) r2D.getHeight()};
+    }
+    
     public static void cambiarTema(boolean soloUI) {
         usarTemaOscuro = !usarTemaOscuro;
         
@@ -207,7 +219,6 @@ public class AppUtils {
             
             try {
                 String comando = COMANDO_DE_PYTHON + " main.py " + concatenarArgumentos();
-                
                 proceso = Runtime.getRuntime().exec(comando, null, rutaDelBackend);
                 
                 while (proceso.isAlive()) {

@@ -6,7 +6,6 @@ import cdu.utils.CDULogger;
 import cdu.utils.AppUtils;
 import java.awt.Color;
 import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -23,7 +22,7 @@ public class CDU {
     }
     
     public static void inicializarApp() {
-        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  CDU v0.0.5");
+        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  CDU v0.0.6");
         CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Sistema " + AppUtils.SYSTEM_NAME);
         
         

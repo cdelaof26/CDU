@@ -96,11 +96,11 @@ def ejecutar_funcion():
             try:
                 resultado = conversiones.convertir_unidades_complejas(datos[1], datos[0], datos[2])
             except ValueError:
-                print("INVALID_OUT_U")
+                print("INVALID_IN_OUT_U")
                 exit(1)
         else:
             resultado = conversiones.convertir_unidades(
-                conversiones.determinar_tipo_de_unidad(datos[1]), datos[1], datos[0], datos[2], False
+                conversiones.determinar_tipo_de_unidad(datos[1]), datos[1], datos[0], datos[2], False, False
             )
 
         if resultado:

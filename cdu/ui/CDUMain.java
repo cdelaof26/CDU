@@ -2,7 +2,6 @@ package cdu.ui;
 
 import cdu.utils.AppUtils;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.HeadlessException;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -36,6 +35,9 @@ public class CDUMain extends JFrame {
     // Fin elementos UI
     
     
+    PanelDeConversiones test = new PanelDeConversiones();
+    
+    
     public CDUMain() throws HeadlessException {
         initUI();
     }
@@ -53,8 +55,13 @@ public class CDUMain extends JFrame {
         
         contenedorVista.setPreferredSize(new Dimension(940, 450));
         contenedorVista.setBorder(null);
+        contenedorVista.setViewportView(test);
         
         nuevaDefinicion.addActionListener((Action) -> {
+        });
+        
+        limpiar.addActionListener((Action) -> {
+            test.reiniciarPanel();
         });
         
         preferencias.addActionListener((Action) -> {
@@ -94,8 +101,6 @@ public class CDUMain extends JFrame {
         
         
         actualizarTema();
-        
-        panelDePreferencias.setVisible(true);
     }
     
     public void actualizarTema() {
@@ -107,6 +112,7 @@ public class CDUMain extends JFrame {
         contenedorVista.setBackground(AppUtils.APP_BG_A_COLOR);
         contenedorVista.getVerticalScrollBar().setUI(new ColorScrollBarUI());
         contenedorVista.getHorizontalScrollBar().setUI(new ColorScrollBarUI());
+        test.actualizarTema();
         
         nuevaDefinicion.actualizarTema();
         limpiar.actualizarTema();

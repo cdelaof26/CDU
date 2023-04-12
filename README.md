@@ -106,6 +106,11 @@ ejecutable `.jar`
 
 ### Historial de cambios
 
+### v0.0.6 [11-04-23]
+- Implementadas las conversiones a través de la UI
+- Botón de limpiar funciona c:
+
+
 ### v0.0.5 [10-04-23]
 - Interfaz más funcional
   - Agregado preferencias
