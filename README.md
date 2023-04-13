@@ -53,8 +53,6 @@ $ java cdu/CDU
 </pre>
 
 - Alternativamente, puede ser empacado en un ejecutable JAR
-  (Probado con Java 8)
-
   - Elimina o mueve el directorio `.git` para prevenir que la 
     ejecución de `jar` incluya estos archivos en el paquete,
 
@@ -70,7 +68,13 @@ $ mv .git /nueva/ruta
 
 <pre>
 $ javac -classpath . cdu/CDU.java
+
+# Java 8
 $ jar cmvf ./manifest.mf CDU.jar -classpath . cdu/CDU
+
+# Java 11 ó posterior
+$ jar cmvf ./manifest.mf CDU.jar *
+
 $ java -jar CDU.jar
 
 # Alternativamente se puede hacer doble click sobre el archivo JAR
@@ -109,7 +113,7 @@ ejecutable `.jar`
 ### v0.0.7 [12-04-23]
 - Botón de copiar funcionando
 - Agregar definiciones funcionando
-- Formato arreglado de conversiones por la regla de 3 implícita
+- Formato arreglado para conversiones por la regla de 3 implícita
 - Espacios de trabajo implementados
 
 
