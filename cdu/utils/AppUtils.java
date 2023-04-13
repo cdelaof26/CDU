@@ -12,6 +12,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.UIManager;
 
 /**
@@ -68,35 +71,25 @@ public class AppUtils {
                 base += SYSTEM_ANCHOR + ruta;
         }
         
+        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "JPR " + base);
+        
         return base;
     }
     
-    public static String leerArchivo(InputStream inputStream) {
+    public static String leerArchivo(InputStream inputStream) throws IOException, NullPointerException {
         String datos = "";
         
-        FileReader fileReader = null;
-        BufferedReader buffReader = null;
+        InputStreamReader isr = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+        BufferedReader buffReader = new BufferedReader(isr);
+
+        String linea = buffReader.readLine();
         
-        try {
-            buffReader = new BufferedReader(new InputStreamReader(inputStream));
-            
-            String linea = buffReader.readLine();
-            
-            while (linea != null) {
-                datos += linea + "\n";
-                linea = buffReader.readLine();
-            }
-        } catch (IOException | NullPointerException ex) {
-            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Error al leer archivo en flujo de datos (buffered)");
-            CDULogger.imprimirExcepcion(ex);
+        while (linea != null) {
+            datos += linea + "\n";
+            linea = buffReader.readLine();
         }
         
-        if (fileReader != null) {
-            try { fileReader.close(); } catch (IOException ex) { }
-        }
-        if (buffReader != null) {
-            try { buffReader.close(); } catch (IOException ex) { }
-        }
+        try { buffReader.close(); } catch (IOException ex) { }
         
         return datos;
     }
@@ -130,7 +123,17 @@ public class AppUtils {
         
         InputStream origen = ClassLoader.getSystemResourceAsStream(rutaDelPaquete);
 
-        return escribirArchivo(destino, leerArchivo(origen));
+        String datos;
+        try {
+            datos = leerArchivo(origen);
+            
+            return escribirArchivo(destino, datos);
+        } catch (IOException | NullPointerException ex) {
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Error al leer archivo en flujo de datos (buffered: " + rutaDelPaquete + ")");
+            CDULogger.imprimirExcepcion(ex);
+        }
+        
+        return false;
     }
     
     public static boolean copiarBackend() {
@@ -148,11 +151,11 @@ public class AppUtils {
         }
 
         for (String archivo : ARCHIVOS_EN_CDUBACKEND) {
-            operacionExitosa = operacionExitosa && copiarArchivoEmpaquetado(unirRutas("cdubackend", archivo), rutaDelBackend.getAbsolutePath(), archivo);
+            operacionExitosa = operacionExitosa && copiarArchivoEmpaquetado("cdubackend/" + archivo, rutaDelBackend.getAbsolutePath(), archivo);
         }
 
         for (String archivo : ARCHIVOS_PY_EN_HERRAMIENTAS) {
-            operacionExitosa = operacionExitosa && copiarArchivoEmpaquetado(unirRutas("cdubackend", "herramientas", archivo), rutaDelBackend.getAbsolutePath(), unirRutas("herramientas", archivo));
+            operacionExitosa = operacionExitosa && copiarArchivoEmpaquetado("cdubackend/herramientas/" + archivo, rutaDelBackend.getAbsolutePath(), unirRutas("herramientas", archivo));
         }
         
         return operacionExitosa;
@@ -218,8 +221,9 @@ public class AppUtils {
         public void run() {
             ejecutando = true;
             
+            String comando = "";
             try {
-                String comando = COMANDO_DE_PYTHON + " main.py " + concatenarArgumentos();
+                comando = COMANDO_DE_PYTHON + " main.py " + concatenarArgumentos();
                 proceso = Runtime.getRuntime().exec(comando, null, rutaDelBackend);
                 
                 while (proceso.isAlive()) {
@@ -235,6 +239,10 @@ public class AppUtils {
                 CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Error al ejecutar script");
                 CDULogger.imprimirExcepcion(ex);
             }
+            
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "Command \"" + comando + "\" ended with code " + codigoDeSalida);
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, " cwd \"" + rutaDelBackend.getAbsolutePath() + "\"");
+            CDULogger.imprimirMensajeMultilinea(CDULogger.TipoDeDato.DEBUG, "  Output\n" + salida);
             
             ejecutando = false;
         }

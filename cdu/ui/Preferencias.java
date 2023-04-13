@@ -120,14 +120,15 @@ public class Preferencias extends JDialog {
                             while(script.estaEjecutandose())
                                 try { Thread.sleep(100); } catch (InterruptedException ex) { }
                             
-                            if (script.getCodigoDeSalida() != 0) {
+                            // Added workaround for Windows
+                            if (script.getCodigoDeSalida() != 0 && !(AppUtils.SYSTEM_ANCHOR.equals("\\") && script.getSalida().equals(""))) {
                                 CDULogger.imprimirMensajeMultilinea(CDULogger.TipoDeDato.UNK, script.getSalida());
                                 
                                 new MensajeFlotante().mostrarMensaje("Ocurrio un error inesperado, intenta de nuevo", CDULogger.TipoDeDato.ERROR);
                                 return;
                             }
                             
-                            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Ejecución terminada");
+                            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Terminando ejecución");
                             new MensajeFlotante().mostrarMensaje("Se han eliminado los datos de CDU, presiona aceptar\npara salir\n\n    Bye bye!", CDULogger.TipoDeDato.INFO);
                             
                             System.exit(0);

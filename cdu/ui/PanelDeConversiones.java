@@ -45,7 +45,6 @@ public class PanelDeConversiones extends JPanel {
     private final JLabel resultadoSimple = new JLabel();
     
     private ArrayList<JLabel> resultadoComplejo = new ArrayList<>();
-//    private final ArrayList<Divisor> resultadoComplejoDivisores = new ArrayList<>();
     
     private final PanelDeConversiones panel = this;
     

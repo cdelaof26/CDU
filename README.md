@@ -31,6 +31,10 @@ Antes de utilizarlo, por favor lee la [LICENCIA](LICENSE)
 
 ### Ejecutar el proyecto
 
+**IMPORTANTE**: Los usuarios de Windows deben seguir los comandos 
+indicados para sistemas Windows o podrían experimentar de texto 
+malformado
+
 - Abre tu consola de comandos preferida
 
 - Clona este repositorio
@@ -48,15 +52,21 @@ $ cd CDU
 - ### **Ejecución con Java y Python**: Compila y ejecuta
 
 <pre>
+# Usuarios de Linux y macOS
 $ javac -classpath . cdu/CDU.java
 $ java cdu/CDU
+
+# Usuarios de Windows
+$ javac -encoding utf8 -classpath . cdu/CDU.java
+$ java -Dfile.encoding=UTF-8 cdu/CDU
 </pre>
 
-- Alternativamente, puede ser empacado en un ejecutable JAR
+- Alternativamente, CDU puede ser empacado en un ejecutable JAR
   - Elimina o mueve el directorio `.git` para prevenir que la 
     ejecución de `jar` incluya estos archivos en el paquete,
 
 <pre>
+# Comandos solo para Linux y macOS
 $ rm -r .git
 
     ó
@@ -67,18 +77,27 @@ $ mv .git /nueva/ruta
 - Empaqueta y ejecuta
 
 <pre>
+# Usuarios de Linux y macOS
 $ javac -classpath . cdu/CDU.java
 
-# Java 8
+# Usuarios de Windows
+$ javac -encoding utf8 -classpath . cdu/CDU.java
+
+# Java 8 - Cualquier sistema
 $ jar cmvf ./manifest.mf CDU.jar -classpath . cdu/CDU
 
-# Java 11 ó posterior
+# Java 11 ó posterior - Cualquier sistema
 $ jar cmvf ./manifest.mf CDU.jar *
 
+# Usuarios de Linux y macOS
 $ java -jar CDU.jar
 
+# Usuarios de Windows
+$ java -Dfile.encoding=UTF-8 -jar CDU.jar
+
 # Alternativamente se puede hacer doble click sobre el archivo JAR
-# (en lugar de escribir "java -jar CDU.jar" en la terminal)
+# (en lugar de escribir "java -jar CDU.jar" en la terminal,
+#  los usuarios de Windows podrían experimentar texto malformado)
 </pre>
 
 
@@ -93,11 +112,17 @@ $ cd cdubackend
 - Ejecuta
 
 <pre>
-# Si te encuentras en Linux/macOS
-$ cd python3 main.py
+# Usuarios de Linux y macOS
+$ python3 main.py
 
-# Si te encuentras en Windows
-$ cd python main.py
+# Usuarios de Windows
+$ python main.py
+</pre>
+
+### Debug [CDUui]
+
+<pre>
+$ java -jar CDU.jar debug
 </pre>
 
 
@@ -107,8 +132,15 @@ Para desinstalar CDU, utiliza la opción en preferencias para eliminar
 los datos de configuración, elimina el directorio del proyecto y/o el 
 ejecutable `.jar`
 
+**Nota**: Los usuarios de Windows deben eliminar manualmente la carpeta 
+      `C:\Users\NOMBRE_DEL_USUARIO\.cdu_data`
+
 
 ### Historial de cambios
+
+### v0.0.7-0 [13-04-23]
+- Reparación de fallos en sistemas con Windows
+
 
 ### v0.0.7 [12-04-23]
 - Botón de copiar funcionando

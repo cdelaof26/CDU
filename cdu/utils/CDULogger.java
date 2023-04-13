@@ -7,13 +7,20 @@ package cdu.utils;
  */
 public class CDULogger {
     public enum TipoDeDato {
-        UNK, EMPTY, GRAVE, ERROR, INFO, TRACE
+        DEBUG, UNK, EMPTY, GRAVE, ERROR, INFO, TRACE
     }
     
     private static String registro = "";
     
+    public static boolean printDebugData = false;
+    
     public static void imprimirMensaje(TipoDeDato tipo, String mensaje) {
         switch(tipo) {
+            case DEBUG:
+                if (!printDebugData)
+                    return;
+                mensaje = "[DEBUG] " + mensaje + " ";
+            break;
             case UNK:
                 mensaje = "[UNK]   " + mensaje + " ";
             break;

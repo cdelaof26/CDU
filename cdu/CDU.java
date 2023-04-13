@@ -5,9 +5,16 @@ import cdu.ui.MensajeFlotante;
 import cdu.utils.CDULogger;
 import cdu.utils.AppUtils;
 import java.awt.Color;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.plaf.FontUIResource;
 
 /**
  * Clase principal
@@ -16,13 +23,17 @@ import javax.swing.UnsupportedLookAndFeelException;
  */
 public class CDU {
     public static void main(String[] args) {
+        if (args.length == 1)
+            if (args[0].equalsIgnoreCase("debug"))
+                CDULogger.printDebugData = true;
+        
         inicializarApp();
         
         new CDUMain().setVisible(true);
     }
     
     public static void inicializarApp() {
-        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  CDU v0.0.7");
+        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  CDU v0.0.7-0");
         CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Sistema " + AppUtils.SYSTEM_NAME);
         
         
@@ -63,7 +74,7 @@ public class CDU {
         if (AppUtils.copiarBackend()) {
             CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Se copió el backend a " + AppUtils.rutaDelBackend.getAbsolutePath());
         } else {
-            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.ERROR, "Fallo al copiar el backend");
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.GRAVE, "Fallo al copiar el backend");
             CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  Verifica la integridad del ejecutable");
             CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  Verifica los permisos de escritura en " + AppUtils.USER_HOME);
             CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  La app se cerrará ahora");
@@ -80,7 +91,7 @@ public class CDU {
             try { Thread.sleep(100); } catch (InterruptedException ex) { }
         
         if (script.getCodigoDeSalida() != 0) {
-            CDULogger.imprimirMensajeMultilinea(CDULogger.TipoDeDato.UNK, script.getSalida());
+            CDULogger.imprimirMensajeMultilinea(CDULogger.TipoDeDato.DEBUG, script.getSalida());
         } else if (script.getSalida().equalsIgnoreCase("Dark")) {
             CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  Aplicando tema oscuro...");
             AppUtils.cambiarTema(true);

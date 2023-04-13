@@ -133,6 +133,8 @@ public class CDUMain extends JFrame {
     }
     
     public void actualizarTema() {
+        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "Updating app theme");
+        
         contenedor.setBackground(AppUtils.APP_BG_COLOR);
         
         titulo.setForeground(AppUtils.APP_FG_COLOR);

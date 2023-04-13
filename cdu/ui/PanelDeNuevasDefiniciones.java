@@ -334,19 +334,27 @@ public class PanelDeNuevasDefiniciones extends JDialog {
     private class GuardadorDeDeficion extends Thread {
         @Override
         public void run() {
+            CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "Attempt to create a new definition");
+            
             mensajeDeEstado.setText("");
             
             if (tipoDeUnidadSeleccionado.equals("")) {
+                CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "User didn't select an unit");
+                
                 mensajeDeEstado.setText("Selecciona un tipo de unidad");
                 return;
             }
             
             if (entradas[0].getText().isEmpty()) {
+                CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "User didn't fill input data");
+                
                 mensajeDeEstado.setText("No hay datos de entrada");
                 return;
             }
             
             if (entradas[1].getText().isEmpty()) {
+                CDULogger.imprimirMensaje(CDULogger.TipoDeDato.DEBUG, "User didn't fill output data");
+                
                 mensajeDeEstado.setText("No hay datos de salida");
                 return;
             }
