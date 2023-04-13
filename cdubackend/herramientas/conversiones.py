@@ -158,8 +158,8 @@ def expresar_conversion_directa(tipo: TDUF, unidad: str, unidad_a_convertir: str
                 return f"{definicion.valor} {unidad} " \
                        f"-> {definicion.valor_equivalente} {unidad_a_convertir}"
             if unidad_a_convertir == definicion.unidad and unidad == definicion.unidad_equivalente:
-                return f"1 {definicion.unidad} " \
-                       f"-> {definicion.valor / definicion.valor_equivalente} {definicion.unidad_equivalente}"
+                return f"1 {definicion.unidad_equivalente} " \
+                       f"-> %.6f {definicion.unidad}" % (definicion.valor / definicion.valor_equivalente)
 
     return
 
@@ -343,21 +343,27 @@ def convertir_unidades_complejas(unidad: str, valor: float, unidad_a_convertir: 
     return resultado
 
 
-def obtener_dato_unidad(msg: str) -> tuple:
-    # Esta función solo es para la interfaz CLI
+def extraer_dato_unidad(datos: str) -> tuple:
+    datos = datos.replace(" ", "")
 
-    print(msg)
-    dato_unidad = input("> ").replace(" ", "")
-
-    valor = re.findall(r"^-?\d*?.?\d+(?=[a-zA-Z])", dato_unidad)
+    valor = re.findall(r"^-?\d*?.?\d+(?=[a-zA-Z])", datos)
     if not valor:
         raise KeyboardInterrupt("No hay un valor numérico")
 
-    unidad = dato_unidad.replace(valor[0], "")
+    unidad = datos.replace(valor[0], "")
     if not unidad:
         raise KeyboardInterrupt("No hay una unidad")
 
     return float(valor[0]), unidad
+
+
+def obtener_dato_unidad(msg: str) -> tuple:
+    # Esta función solo es para la interfaz CLI
+
+    print(msg)
+    dato_unidad = input("> ")
+
+    return extraer_dato_unidad(dato_unidad)
 
 
 def procesar_entrada():

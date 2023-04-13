@@ -52,6 +52,7 @@ public class AppUtils {
     public static final String NOMBRE_DE_LA_FUENTE = SYSTEM_ANCHOR.equals("\\") ? "Arial" : SYSTEM_NAME.charAt(0) == 'M' ? "Helvetica Neue" : "";
     
     public static Font fondoEstandar = new Font(NOMBRE_DE_LA_FUENTE, Font.PLAIN, 13);
+    public static Font fondoES = new Font(NOMBRE_DE_LA_FUENTE, Font.PLAIN, 18);
     public static Font fondoXL = new Font(NOMBRE_DE_LA_FUENTE, Font.BOLD, 24);
     public static Font fondoXXL = new Font(NOMBRE_DE_LA_FUENTE, Font.BOLD, 32);
     

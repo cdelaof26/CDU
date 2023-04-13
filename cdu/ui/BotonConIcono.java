@@ -98,6 +98,11 @@ public class BotonConIcono extends JButton {
         
         icono.setIcon(obtenerIcono());
     }
+
+    @Override
+    public void setText(String text) {
+        texto.setText(text);
+    }
     
     
     private ImageIcon obtenerIcono() {

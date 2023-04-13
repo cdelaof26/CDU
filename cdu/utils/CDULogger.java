@@ -1,7 +1,8 @@
 package cdu.utils;
 
 /**
- *
+ * Utilidad básica para imprimir mensajes
+ * 
  * @author cristopher
  */
 public class CDULogger {

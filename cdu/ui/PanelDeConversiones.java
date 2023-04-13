@@ -5,14 +5,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.KeyboardFocusManager;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -43,12 +44,20 @@ public class PanelDeConversiones extends JPanel {
     
     private final JLabel resultadoSimple = new JLabel();
     
-    private final ArrayList<JLabel> resultadoComplejo = new ArrayList<>();
-    // Fin elementos UI
+    private ArrayList<JLabel> resultadoComplejo = new ArrayList<>();
+//    private final ArrayList<Divisor> resultadoComplejoDivisores = new ArrayList<>();
     
     private final PanelDeConversiones panel = this;
     
-    public PanelDeConversiones() {
+    private final CDUMain contenedor;
+    // Fin elementos UI
+    
+    private String ultimaSalida = "";
+    
+    
+    public PanelDeConversiones(CDUMain contenedor) {
+        this.contenedor = contenedor;
+        
         initUI();
     }
     
@@ -75,11 +84,37 @@ public class PanelDeConversiones extends JPanel {
                     }
                 
                 for (int i = 0; i < 5; i++)
-                    if (entradas[i].isFocusOwner())
+                    if (entradas[i].isFocusOwner()) {
                         if (i + 1 < 5)
                             entradas[i + 1].requestFocus();
                         else
                             entradas[0].requestFocus();
+                        
+                        return;
+                    }
+            }
+        });
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("shift TAB"), "bTab");
+        this.getActionMap().put("bTab", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for (int i = 4; i > -1; i--)
+                    if (entradas[i].isFocusOwner()) {
+                        if (i - 1 > -1)
+                            entradas[i - 1].requestFocus();
+                        else
+                            entradas[4].requestFocus();
+                        
+                        return;
+                    }
+            }
+        });
+        
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("control C"), "Copiar");
+        this.getActionMap().put("Copiar", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                contenedor.hacerClickACopiar();
             }
         });
         
@@ -128,7 +163,7 @@ public class PanelDeConversiones extends JPanel {
         layout.putConstraint(SpringLayout.WEST, ingresaUnDato, 50, SpringLayout.WEST, this);
         
         layout.putConstraint(SpringLayout.VERTICAL_CENTER, entradas[0], 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
-        layout.putConstraint(SpringLayout.WEST, entradas[0], 20, SpringLayout.WEST, ingresaUnDato);
+        layout.putConstraint(SpringLayout.WEST, entradas[0], -20, SpringLayout.WEST, ingresaUnDato);
         
         layout.putConstraint(SpringLayout.VERTICAL_CENTER, divisores[0], 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
         layout.putConstraint(SpringLayout.WEST, divisores[0], 10, SpringLayout.EAST, entradas[0]);
@@ -163,6 +198,7 @@ public class PanelDeConversiones extends JPanel {
         for (TextFieldUnformated t : entradas) {
             t.setBackground(AppUtils.APP_BG_A_COLOR);
             t.setForeground(AppUtils.APP_FG_COLOR);
+            t.setCaretColor(AppUtils.APP_FG_COLOR);
         }
         
         if (AppUtils.usarTemaOscuro) {
@@ -171,7 +207,11 @@ public class PanelDeConversiones extends JPanel {
             ingresaUnDato.setForeground(Color.GRAY);
         }
         
-        resultadoSimple.setForeground(AppUtils.APP_FG_COLOR);
+        if (resultadoSimple.getForeground() == AppUtils.LIGHT_FG || resultadoSimple.getForeground() == AppUtils.DARK_FG)
+            resultadoSimple.setForeground(AppUtils.APP_FG_COLOR);
+        
+        for (JLabel rc : resultadoComplejo)
+            rc.setForeground(AppUtils.APP_FG_COLOR);
     }
     
     public void prepararEntradaDeDatos() {
@@ -181,6 +221,8 @@ public class PanelDeConversiones extends JPanel {
     }
     
     public void reiniciarPanel() {
+        ultimaSalida = "";
+        
         for (TextFieldUnformated t : entradas)
             t.setText("");
         
@@ -195,7 +237,27 @@ public class PanelDeConversiones extends JPanel {
         
         resultadoSimple.setText("");
         
+        for (JLabel rc : resultadoComplejo)
+            panel.remove(rc);
+        
         this.setPreferredSize(new Dimension(940, 450));
+        
+        layout.putConstraint(SpringLayout.VERTICAL_CENTER, resultadoSimple, 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
+        layout.putConstraint(SpringLayout.WEST, resultadoSimple, 5, SpringLayout.EAST, entradas[0]);
+        
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    public boolean copiarUltimaSalida() {
+        if (!ultimaSalida.equals("")) {
+            StringSelection stringSelection = new StringSelection(ultimaSalida);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
+            return true;
+        }
+        
+        return false;
     }
     
     private class TextFieldUnformated extends JTextField {
@@ -211,7 +273,6 @@ public class PanelDeConversiones extends JPanel {
             this.setSelectionColor(Color.GRAY);
             this.setBorder(null);
             this.setFont(AppUtils.fondoXL);
-            
             
             
             int [] dimensiones = AppUtils.obtenerLongitudDeTexto("000", AppUtils.fondoXL);
@@ -236,8 +297,18 @@ public class PanelDeConversiones extends JPanel {
                 
                 @Override
                 public void keyReleased(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_C && e.isControlDown()) {
+                        e.consume();
+                        contenedor.hacerClickACopiar();
+                        return;
+                    }
+                    
+                    if (e.getKeyCode() == KeyEvent.VK_TAB || e.getKeyCode() == KeyEvent.VK_SHIFT) {
+                        return;
+                    }
+                    
                     if (e.getKeyChar() == '/' && entradaPrincipal && !entradas[1].isVisible()) {
-                        // Solo la entrada principal [0], puede poner las otras dos
+                        // Solo la entrada principal [0], puede poner las otras cuatro entradas
                         
                         entradas[0].setText(entradas[0].getText().replace("/", ""));
                         
@@ -308,9 +379,21 @@ public class PanelDeConversiones extends JPanel {
         }
     }
     
-    class CalculadorDeConversiones extends Thread {
+    private class CalculadorDeConversiones extends Thread {
         @Override
         public void run() {
+            if (!resultadoComplejo.isEmpty()) {
+                for (JLabel rc : resultadoComplejo)
+                    panel.remove(rc);
+
+                panel.revalidate();
+                panel.repaint();
+
+                resultadoComplejo = new ArrayList<>();
+            }
+            
+            ultimaSalida = "";
+            
             String [] datos;
             
             if (!entradas[1].isVisible())
@@ -318,11 +401,15 @@ public class PanelDeConversiones extends JPanel {
             else
                 datos = (entradas[0].getText() + entradas[1].getText() + "/" + entradas[2].getText() + "->" + entradas[3].getText() + "/" + entradas[4].getText()).replace(" ", "").split("->");
             
-//            System.out.println("got " + Arrays.toString(datos));
-            
             if (datos.length != 2) {
+                resultadoSimple.setForeground(Color.RED);
                 resultadoSimple.setText("Entrada inválida");
-                resultadoSimple.setForeground(Color.red);
+                return;
+            }
+            
+            if (datos[0].equals("") || datos[1].equals("") || datos[0].equals("/") || datos[1].equals("/")) {
+                resultadoSimple.setForeground(new Color(246, 101, 24));
+                resultadoSimple.setText("Datos incompletos");
                 return;
             }
             
@@ -331,8 +418,8 @@ public class PanelDeConversiones extends JPanel {
             String unidadDeSalida = datos[1];
             
             if (datos[0].equals("") || unidadDeEntrada.equals("") || valor.equals("") || unidadDeSalida.equals("")) {
-                resultadoSimple.setText("Entrada inválida");
                 resultadoSimple.setForeground(Color.red);
+                resultadoSimple.setText("Entrada inválida");
                 return;
             }
             
@@ -343,15 +430,13 @@ public class PanelDeConversiones extends JPanel {
                 try { sleep(1); } catch (InterruptedException ex) { }
             
             String salida = script.getSalida();
-//            System.out.println("out " + salida);
-//            System.out.println("exit " + script.getCodigoDeSalida());
             
             if (script.getCodigoDeSalida() != 0) {
                 if (salida.equalsIgnoreCase("NO_DATA")) {
                     resultadoSimple.setForeground(Color.MAGENTA);
                     resultadoSimple.setText("Unidad desconocida");  
                 } else if (salida.equalsIgnoreCase("INVALID_IN_OUT_U")) {
-                    resultadoSimple.setForeground(Color.ORANGE);
+                    resultadoSimple.setForeground(new Color(246, 101, 24));
                     resultadoSimple.setText("Unidades incompletas");
                 } else {
                     resultadoSimple.setForeground(Color.red);
@@ -367,22 +452,119 @@ public class PanelDeConversiones extends JPanel {
                 return;
             }
             
-            if (salida.replace("->", "").length() == salida.length()) {
-                salida = "= " + salida;
-            } else if (!salida.contains("/")) {
-                salida = "= " + salida;
-            }
+            ultimaSalida = salida;
             
-            resultadoSimple.setText(salida);
+            if (!salida.contains("/")) {
+                // Salida para datos no derivados
+                
+                salida = "= " + salida;
+                resultadoSimple.setText(salida);
             
-            int sumaDeLargos = resultadoSimple.getPreferredSize().width + entradas[0].getPreferredSize().width + 145;
-            if (divisores[0].isVisible())
+                int sumaDeLargos = resultadoSimple.getPreferredSize().width + entradas[0].getPreferredSize().width + 145;
+                if (divisores[0].isVisible())
+                    sumaDeLargos += divisores[0].getPreferredSize().width + flechaDivisora.getPreferredSize().width + divisores[1].getPreferredSize().width;
+
+                if (sumaDeLargos > 940)
+                    panel.setPreferredSize(new Dimension(sumaDeLargos, 440));
+                else
+                    panel.setPreferredSize(new Dimension(sumaDeLargos, 450));
+            } else {
+                // Salida para datos derivados
+                
+                resultadoSimple.setText("");
+                
+                
+                String [] factores = salida.replace("=", "*").split(" \\* ");
+                
+                JLabel igual = new JLabel("=");
+                igual.setFont(AppUtils.fondoXL);
+                igual.setForeground(AppUtils.APP_FG_COLOR);
+                resultadoComplejo.add(igual);
+                panel.add(igual);
+                
+                layout.putConstraint(SpringLayout.VERTICAL_CENTER, igual, 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
+                layout.putConstraint(SpringLayout.WEST, igual, 5, SpringLayout.EAST, divisores[1]);
+                
+                
+                int sumaDeLargos = 0;
+                
+                for (int i = 0; i < factores.length; i++) {
+                    String [] datosSeparados = factores[i].split("/");
+                    
+                    JLabel numerador = new JLabel(datosSeparados[0]);
+                    Divisor separador = new Divisor();
+                    JLabel denominador = new JLabel(datosSeparados[1]);
+                    
+                    JLabel simbolo = new JLabel("*");
+                    
+                    numerador.setFont(AppUtils.fondoXL);
+                    denominador.setFont(AppUtils.fondoXL);
+                    simbolo.setFont(AppUtils.fondoXL);
+                    numerador.setForeground(AppUtils.APP_FG_COLOR);
+                    denominador.setForeground(AppUtils.APP_FG_COLOR);
+                    simbolo.setForeground(AppUtils.APP_FG_COLOR);
+                    
+                    separador.setVisible(true);
+                    if (numerador.getPreferredSize().width > denominador.getPreferredSize().width)
+                        separador.setPreferredSize(new Dimension(numerador.getPreferredSize().width, 3));
+                    else
+                        separador.setPreferredSize(new Dimension(denominador.getPreferredSize().width, 3));
+                    
+                    sumaDeLargos += separador.getPreferredSize().width + simbolo.getPreferredSize().width + 5; // 5 de separación
+                    
+                    resultadoComplejo.add(numerador);
+                    resultadoComplejo.add(separador);
+                    resultadoComplejo.add(denominador);
+                    
+                    if (i + 1 != factores.length)
+                        resultadoComplejo.add(simbolo);
+                    
+                    if (i == 0) {
+                        layout.putConstraint(SpringLayout.VERTICAL_CENTER, separador, 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
+                        layout.putConstraint(SpringLayout.WEST, separador, 5, SpringLayout.EAST, igual);
+                    } else {
+                        // Se alinea con el simbolo anterior
+                        layout.putConstraint(SpringLayout.VERTICAL_CENTER, separador, 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
+                        
+                        if (i + 1 != factores.length)
+                            layout.putConstraint(SpringLayout.WEST, separador, 5, SpringLayout.EAST, resultadoComplejo.get(resultadoComplejo.size() - 5));
+                        else
+                            layout.putConstraint(SpringLayout.WEST, separador, 5, SpringLayout.EAST, resultadoComplejo.get(resultadoComplejo.size() - 4));
+                        
+                    }
+                    
+                    layout.putConstraint(SpringLayout.SOUTH, numerador, 0, SpringLayout.NORTH, separador);
+                    layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, numerador, 0, SpringLayout.HORIZONTAL_CENTER, separador);
+                    layout.putConstraint(SpringLayout.NORTH, denominador, 0, SpringLayout.SOUTH, separador);
+                    layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, denominador, 0, SpringLayout.HORIZONTAL_CENTER, separador);
+                    
+                    layout.putConstraint(SpringLayout.VERTICAL_CENTER, simbolo, 0, SpringLayout.VERTICAL_CENTER, ingresaUnDato);
+                    layout.putConstraint(SpringLayout.WEST, simbolo, 5, SpringLayout.EAST, separador);
+                    
+                    
+                    panel.add(numerador);
+                    panel.add(separador);
+                    panel.add(denominador);
+                    
+                    if (i + 1 != factores.length)
+                        panel.add(simbolo);
+                    
+                    if (i + 2 == factores.length)
+                        simbolo.setText("=");
+                }
+                
+                
+                sumaDeLargos += entradas[0].getPreferredSize().width + 145;
                 sumaDeLargos += divisores[0].getPreferredSize().width + flechaDivisora.getPreferredSize().width + divisores[1].getPreferredSize().width;
-            
-            if (sumaDeLargos > 940)
-                panel.setPreferredSize(new Dimension(sumaDeLargos, 440));
-            else
-                panel.setPreferredSize(new Dimension(sumaDeLargos, 450));
+
+                if (sumaDeLargos > 940)
+                    panel.setPreferredSize(new Dimension(sumaDeLargos, 440));
+                else
+                    panel.setPreferredSize(new Dimension(sumaDeLargos, 450));
+                
+                panel.revalidate();
+                panel.repaint();
+            }
         }
     }
     

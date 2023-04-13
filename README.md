@@ -106,6 +106,13 @@ ejecutable `.jar`
 
 ### Historial de cambios
 
+### v0.0.7 [12-04-23]
+- Botón de copiar funcionando
+- Agregar definiciones funcionando
+- Formato arreglado de conversiones por la regla de 3 implícita
+- Espacios de trabajo implementados
+
+
 ### v0.0.6 [11-04-23]
 - Implementadas las conversiones a través de la UI
 - Botón de limpiar funciona c:

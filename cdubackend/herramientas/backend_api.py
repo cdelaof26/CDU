@@ -10,14 +10,14 @@ FANCY_FORMAT = True
 
 # Mini doc
 #   Available flags
-# -m:       Mode-Values: conv, man, get
+# -m:       Mode-Values: conv, man, get, get_t
 # -in:      Input data
 # -in_u:    Input unit
 # -out_u:   Output unit
 # -s:       Setting name
 # -theme:   Theme-Values: get, toggle
 # -rm:      Remove-Values: definition, all_data
-# -add:     Add-Values: String data
+# -add:     Add-Values: Data string: [type];[value][unit]=[value][unit]
 # -id:      Index: integer value
 #
 #   Usage: python3 main.py -flag [data]
@@ -30,6 +30,8 @@ FANCY_FORMAT = True
 #        Flags: -theme, -add, -rm, -id
 #
 #   get:  Get definitions
+#
+#   get_t:  Get unit types
 #
 
 
@@ -59,6 +61,53 @@ def obtener_datos_de_conversion() -> list:
         exit(1)
 
     return datos
+
+
+def obtener_nueva_definicion():
+    global app_args
+
+    # Se supone que ya se verificó que app_args contiene "-add"
+    if "-add" not in app_args:
+        print("BAD_CALL")
+        exit(1)
+
+    # Por problemas con las banderas, se deben cambiar los signos negativos por '~'
+
+    tipo_datos = app_args["-add"].replace("~", "-").split(";")
+    if len(tipo_datos) != 2:
+        print("MISSING_DATA")
+        exit(1)
+
+    tipo: conversiones.TDUF
+
+    try:
+        tipo = conversiones.TDUF[tipo_datos[0]]
+    except KeyError:
+        print("UNK_TYPE")
+        exit(1)
+
+    datos = tipo_datos[1].split("=")
+
+    if len(datos) != 2:
+        print("INVALID_INPUT")
+        exit(1)
+
+    try:
+        valor_entrada, unidad_entrada = conversiones.extraer_dato_unidad(datos[0])
+    except KeyboardInterrupt:
+        print("INVALID_INPUT_DATA")
+        exit(1)
+
+    try:
+        valor_salida, unidad_salida = conversiones.extraer_dato_unidad(datos[1])
+    except KeyboardInterrupt:
+        print("INVALID_OUTPUT_DATA")
+        exit(1)
+
+    import herramientas.datos_del_app as dda
+
+    dda.agregar_definicion(tipo, unidad_entrada, valor_entrada, unidad_salida, valor_salida)
+    exit(0)
 
 
 def ejecutar_funcion():
@@ -135,10 +184,19 @@ def ejecutar_funcion():
                             exit(0)
                     except ValueError:
                         exit(1)
+
+        if "-add" in app_args:
+            obtener_nueva_definicion()
+
     elif modo == "get":
         for definicion in conversiones.definiciones:
             if definicion.definida_por_el_usuario:
                 print(definicion.a_cadena(forzar_fancy=True))
+
+        exit(0)
+    elif modo == "get_t":
+        for tipo in conversiones.TDUF:
+            print(tipo.name)
 
         exit(0)
 

@@ -74,6 +74,8 @@ public class BarraDeEspacios extends JPanel {
         
         espacios.get(indice).setActivo(true);
         espacios.get(indice).actualizarTema();
+        
+        contenedor.activarPanel(indice);
     }
     
     private void agregarEspacio() {
@@ -90,12 +92,12 @@ public class BarraDeEspacios extends JPanel {
             layout.putConstraint(SpringLayout.WEST, espacios.get(0), 0, SpringLayout.WEST, this);
         }
         
+        contenedor.crearPanel();
         activarEspacio(ultimoEspacioAgregado);
         ultimoEspacioAgregado++;
         
         this.revalidate();
         this.repaint();
-        
         
         agregarEspacio.setVisible(ultimoEspacioAgregado < 4);
     }
@@ -108,6 +110,8 @@ public class BarraDeEspacios extends JPanel {
         for (int i = indice; i < espacios.size(); i++) {
             espacios.get(i).setNumero(i + 1);
         }
+        
+        contenedor.eliminarPanel(indice);
         
         ultimoEspacioAgregado--;
         

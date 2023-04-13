@@ -37,7 +37,7 @@ def encontrar_argumentos() -> dict:
         exit(1)
 
     app_args = dict()
-    argumentos = re.findall(r"-[\w /.]+", cmd)
+    argumentos = re.findall(r"-[\w ;=/.~]+", cmd)
     argumento_invalido = ""
 
     for argumento in argumentos:
@@ -58,6 +58,7 @@ def encontrar_argumentos() -> dict:
     if cmd.strip():
         print(f"No es posible interpretar \"{' '.join(sys.argv)}\"")
         print(f"    Error cerca de \"{argumento_invalido.strip()}\"")
+        print(f"    Nota: Los signos negativos se deben cambiar por '~'")
         exit(1)
 
     return app_args

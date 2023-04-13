@@ -172,7 +172,7 @@ public class Preferencias extends JDialog {
         layout.putConstraint(SpringLayout.NORTH, temaActivo, 10, SpringLayout.SOUTH, titulo);
         layout.putConstraint(SpringLayout.WEST, temaActivo, 0, SpringLayout.WEST, titulo);
         
-        layout.putConstraint(SpringLayout.NORTH, cambiarTema, 10, SpringLayout.SOUTH, titulo);
+        layout.putConstraint(SpringLayout.VERTICAL_CENTER, cambiarTema, 0, SpringLayout.VERTICAL_CENTER, temaActivo);
         layout.putConstraint(SpringLayout.EAST, cambiarTema, -25, SpringLayout.EAST, contenedorPrincipal);
         
         
@@ -340,7 +340,7 @@ public class Preferencias extends JDialog {
             this.add(botonDeEliminar);
             this.setPreferredSize(new Dimension(longitud, 22));
             
-            this.addMouseMotionListener(new MouseAdapter() {
+            this.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     setBackground(AppUtils.APP_BG_A_COLOR);

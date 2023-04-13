@@ -1,8 +1,10 @@
 package cdu.ui;
 
 import cdu.utils.AppUtils;
+import cdu.utils.CDULogger;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
+import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -24,22 +26,28 @@ public class CDUMain extends JFrame {
     
     private final BarraDeEspacios barra = new BarraDeEspacios(this);
     
-    private final JScrollPane contenedorVista = new JScrollPane();
-    
     private final BotonConIcono nuevaDefinicion = new BotonConIcono("Nueva definición", "Nuevo");
     private final BotonConIcono limpiar = new BotonConIcono("Limpiar", "Limpiar");
     private final BotonConIcono copiar = new BotonConIcono("Copiar", "Copiar");
     private final BotonConIcono preferencias = new BotonConIcono("Preferencias", "Ajustes");
     
-    private final Preferencias panelDePreferencias = new Preferencias(this);
+    public final Preferencias panelDePreferencias = new Preferencias(this);
+    
+    private final PanelDeNuevasDefiniciones panelDeDefiniciones = new PanelDeNuevasDefiniciones(this);
+    
+    
+    private final JScrollPane contenedorDePanelDeConversiones = new JScrollPane();
+    private ArrayList<PanelDeConversiones> panelesDeConversion = new ArrayList<>();
+    private PanelDeConversiones panelActivo = new PanelDeConversiones(this);
     // Fin elementos UI
     
-    
-    PanelDeConversiones test = new PanelDeConversiones();
+    private boolean permitirNuevasDefiniciones = true;
     
     
     public CDUMain() throws HeadlessException {
         initUI();
+        
+        panelesDeConversion.add(panelActivo);
     }
     
     public final void initUI() {
@@ -53,15 +61,36 @@ public class CDUMain extends JFrame {
         
         titulo.setFont(AppUtils.fondoXL);
         
-        contenedorVista.setPreferredSize(new Dimension(940, 450));
-        contenedorVista.setBorder(null);
-        contenedorVista.setViewportView(test);
+        contenedorDePanelDeConversiones.setPreferredSize(new Dimension(940, 450));
+        contenedorDePanelDeConversiones.setBorder(null);
+        contenedorDePanelDeConversiones.setViewportView(panelActivo);
         
         nuevaDefinicion.addActionListener((Action) -> {
+            if (permitirNuevasDefiniciones) {
+                panelDeDefiniciones.setVisible(!panelDeDefiniciones.isVisible());
+            } else {
+                new MensajeFlotante().mostrarMensaje(CDULogger.getRegistro(), CDULogger.TipoDeDato.ERROR);
+            }
         });
         
         limpiar.addActionListener((Action) -> {
-            test.reiniciarPanel();
+            panelActivo.reiniciarPanel();
+        });
+        
+        copiar.addActionListener((Action) -> {
+            if (panelActivo.copiarUltimaSalida()) {
+                copiar.setText("¡Texto copiado!");
+            } else {
+                copiar.setText("No hay datos");
+            }
+            
+            new Thread() {
+                @Override
+                public void run() {
+                    try { sleep(2000); } catch (InterruptedException ex) { }
+                    copiar.setText("Copiar");
+                }
+            }.start();
         });
         
         preferencias.addActionListener((Action) -> {
@@ -71,7 +100,7 @@ public class CDUMain extends JFrame {
         
         contenedor.add(titulo);
         contenedor.add(barra);
-        contenedor.add(contenedorVista);
+        contenedor.add(contenedorDePanelDeConversiones);
         contenedor.add(nuevaDefinicion);
         contenedor.add(limpiar);
         contenedor.add(copiar);
@@ -81,13 +110,13 @@ public class CDUMain extends JFrame {
         layout.putConstraint(SpringLayout.NORTH, titulo, 10, SpringLayout.NORTH, contenedor);
         layout.putConstraint(SpringLayout.EAST, titulo, -30, SpringLayout.EAST, contenedor);
         
-        layout.putConstraint(SpringLayout.SOUTH, barra, 0, SpringLayout.NORTH, contenedorVista);
-        layout.putConstraint(SpringLayout.WEST, barra, 0, SpringLayout.WEST, contenedorVista);
+        layout.putConstraint(SpringLayout.SOUTH, barra, 0, SpringLayout.NORTH, contenedorDePanelDeConversiones);
+        layout.putConstraint(SpringLayout.WEST, barra, 0, SpringLayout.WEST, contenedorDePanelDeConversiones);
         
-        layout.putConstraint(SpringLayout.NORTH, contenedorVista, 10, SpringLayout.SOUTH, titulo);
-        layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, contenedorVista, 0, SpringLayout.HORIZONTAL_CENTER, contenedor);
+        layout.putConstraint(SpringLayout.NORTH, contenedorDePanelDeConversiones, 10, SpringLayout.SOUTH, titulo);
+        layout.putConstraint(SpringLayout.HORIZONTAL_CENTER, contenedorDePanelDeConversiones, 0, SpringLayout.HORIZONTAL_CENTER, contenedor);
         
-        layout.putConstraint(SpringLayout.NORTH, nuevaDefinicion, 10, SpringLayout.SOUTH, contenedorVista);
+        layout.putConstraint(SpringLayout.NORTH, nuevaDefinicion, 10, SpringLayout.SOUTH, contenedorDePanelDeConversiones);
         layout.putConstraint(SpringLayout.WEST, nuevaDefinicion, 30, SpringLayout.WEST, contenedor);
         
         layout.putConstraint(SpringLayout.NORTH, limpiar, 0, SpringLayout.NORTH, nuevaDefinicion);
@@ -109,10 +138,10 @@ public class CDUMain extends JFrame {
         titulo.setForeground(AppUtils.APP_FG_COLOR);
         barra.actualizarTema();
         
-        contenedorVista.setBackground(AppUtils.APP_BG_A_COLOR);
-        contenedorVista.getVerticalScrollBar().setUI(new ColorScrollBarUI());
-        contenedorVista.getHorizontalScrollBar().setUI(new ColorScrollBarUI());
-        test.actualizarTema();
+        contenedorDePanelDeConversiones.setBackground(AppUtils.APP_BG_A_COLOR);
+        contenedorDePanelDeConversiones.getVerticalScrollBar().setUI(new ColorScrollBarUI());
+        contenedorDePanelDeConversiones.getHorizontalScrollBar().setUI(new ColorScrollBarUI());
+        panelActivo.actualizarTema();
         
         nuevaDefinicion.actualizarTema();
         limpiar.actualizarTema();
@@ -120,5 +149,37 @@ public class CDUMain extends JFrame {
         preferencias.actualizarTema();
         
         panelDePreferencias.actualizarTema();
+        panelDeDefiniciones.actualizarTema();
+    }
+    
+    public void hacerClickACopiar() {
+        copiar.doClick();
+    }
+    
+    public void deshabilitarNuevasDefiniciones() {
+        permitirNuevasDefiniciones = false;
+    }
+    
+    public void activarPanel(int indice) {
+        panelActivo = panelesDeConversion.get(indice);
+        panelActivo.actualizarTema();
+        
+        contenedorDePanelDeConversiones.setViewportView(panelActivo);
+        contenedorDePanelDeConversiones.repaint();
+        contenedorDePanelDeConversiones.revalidate();
+    }
+    
+    public void crearPanel() {
+        PanelDeConversiones p = new PanelDeConversiones(this);
+        panelesDeConversion.add(p);
+        panelActivo = p;
+        
+        contenedorDePanelDeConversiones.setViewportView(p);
+        contenedorDePanelDeConversiones.repaint();
+        contenedorDePanelDeConversiones.revalidate();
+    }
+    
+    public void eliminarPanel(int indice) {
+        panelesDeConversion.remove(indice);
     }
 }

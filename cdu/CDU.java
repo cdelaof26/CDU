@@ -22,7 +22,7 @@ public class CDU {
     }
     
     public static void inicializarApp() {
-        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  CDU v0.0.6");
+        CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "  CDU v0.0.7");
         CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Sistema " + AppUtils.SYSTEM_NAME);
         
         
@@ -93,4 +93,12 @@ public class CDU {
         CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Iniciando UI...");
         CDULogger.imprimirMensaje(CDULogger.TipoDeDato.INFO, "Iniciando ventana principal...");
     }
+    
+    // Si estas leyendo esto, probablemente veas lo que hice con muchos elementos UI, en lugar de crear una clase donde
+    // ponga el metodo de initUI, lo hice directamente en los initUI de los objetos que los contienen, además no ocupe
+    // ninguna interfaz para no tener que escribir initUI y actualizarTema...
+    // Y quizá copié y pegué unas clases xd, ó use hilos directos en la interfaz...
+    
+    // En mi defensa, pensé que sería un proyecto más pequeño xd
+    // Si gustas, crea una copia (fork) y mejoralo c:
 }
